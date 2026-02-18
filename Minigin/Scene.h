@@ -1,32 +1,37 @@
 #pragma once
+
+#include "GameObject.h"
+
 #include <memory>
 #include <string>
 #include <vector>
-#include "GameObject.h"
 
 namespace dae
 {
-	class Scene final
-	{
-	public:
-		void Add(std::unique_ptr<GameObject> object);
-		void Remove(const GameObject& object);
-		void RemoveAll();
+    class Scene final
+    {
+        public:
 
-		void Update();
-		void Render() const;
+        void Add(std::unique_ptr<GameObject> object);
+        void Remove(const GameObject& object);
+        void RemoveAll();
 
-		~Scene() = default;
-		Scene(const Scene& other) = delete;
-		Scene(Scene&& other) = delete;
-		Scene& operator=(const Scene& other) = delete;
-		Scene& operator=(Scene&& other) = delete;
+        void Update(float deltaTime);
+        void FixedUpdate(float deltaTime);
+        void Render() const;
 
-	private:
-		friend class SceneManager;
-		explicit Scene() = default;
+        ~Scene() = default;
+        Scene(const Scene& other) = delete;
+        Scene(Scene&& other) = delete;
+        Scene& operator=(const Scene& other) = delete;
+        Scene& operator=(Scene&& other) = delete;
 
-		std::vector < std::unique_ptr<GameObject>> m_objects{};
-	};
+        private:
 
+        friend class SceneManager;
+
+        explicit Scene() = default;
+
+        std::vector<std::unique_ptr<GameObject>> m_Objects { };
+    };
 }

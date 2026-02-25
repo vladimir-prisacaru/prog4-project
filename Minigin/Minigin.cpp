@@ -132,7 +132,6 @@ void dae::Minigin::RunOneFrame()
 {
     using clock = std::chrono::steady_clock;
     using seconds = std::chrono::duration<float>;
-    using milliseconds = std::chrono::milliseconds;
 
 
 
@@ -188,7 +187,8 @@ void dae::Minigin::RunOneFrame()
 
     // This approach was too inaccurate (error of ~1FPS)
     // An attempt to have a course phase with sleep_for and a fine phase with busy waiting
-    // 
+
+    //using milliseconds = std::chrono::milliseconds;
     //auto now { clock::now() };
     //
     //while (now < targetTime)

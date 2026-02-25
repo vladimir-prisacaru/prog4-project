@@ -13,11 +13,6 @@ void dae::TextComponent::SetText(const std::string& text)
     m_NeedsUpdate = true;
 }
 
-void dae::TextComponent::SetPosition(const float x, const float y)
-{
-    m_Parent->SetPosition(x, y);
-}
-
 void dae::TextComponent::SetColor(const SDL_Color& color)
 {
     m_Color = color;
@@ -35,9 +30,17 @@ void dae::TextComponent::SetFont(const std::string& file, uint8_t size)
     SetFont(dae::ResourceManager::GetInstance().LoadFont(file, size));
 }
 
-void dae::TextComponent::Update(float deltaTime)
+void dae::TextComponent::Update(float)
 {
-    std::ignore = deltaTime;
+    if (m_TextureComponent == nullptr)
+    {
+        auto texture { GetOwner()->GetComponent<TextureComponent>() };
+
+        if (texture == nullptr)
+            return;
+
+        m_TextureComponent = texture;
+    }
 
     if (!m_NeedsUpdate)
         return;
@@ -62,16 +65,7 @@ void dae::TextComponent::Update(float deltaTime)
 
     SDL_DestroySurface(surf);
 
-    m_TextTexture = std::make_shared<Texture2D>(texture);
+    m_TextureComponent->SetTexture(std::make_shared<Texture2D>(texture));
+
     m_NeedsUpdate = false;
-}
-
-void dae::TextComponent::Render() const
-{
-    if (m_TextTexture == nullptr)
-        return;
-
-    const auto& pos { m_Parent->GetPosition() };
-
-    Renderer::GetInstance().RenderTexture(*m_TextTexture, pos.x, pos.y);
 }

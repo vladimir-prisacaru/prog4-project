@@ -4,6 +4,7 @@
 #include "TextComponent.h"
 #include "TextureComponent.h"
 #include "FPSCounter.h"
+#include "RotatorComponent.h"
 #include "Scene.h"
 
 #include <SDL3/SDL.h>
@@ -22,37 +23,66 @@ namespace fs = std::filesystem;
 static void load()
 {
     auto& scene = dae::SceneManager::GetInstance().CreateScene();
+    auto defaultFont { dae::ResourceManager::GetInstance().LoadFont("Lingua.otf", 36) };
 
+    // Background
     auto bgObj { std::make_unique<dae::GameObject>() };
     auto bgTextureComp { bgObj->AddComponent<dae::TextureComponent>() };
     bgTextureComp->SetTexture("background.png");
     scene.Add(std::move(bgObj));
 
+    // Logo
     auto logoObj { std::make_unique<dae::GameObject>() };
-    logoObj->SetPosition(358, 180);
+    logoObj->GetTransform().SetLocalPos(358, 180);
     auto logoTextureComp { logoObj->AddComponent<dae::TextureComponent>() };
     logoTextureComp->SetTexture("logo.png");
     scene.Add(std::move(logoObj));
 
-    auto defaultFont { dae::ResourceManager::GetInstance().LoadFont("Lingua.otf", 36) };
-
+    // Title
     auto titleObject { std::make_unique<dae::GameObject>() };
+    titleObject->AddComponent<dae::TextureComponent>();
     auto titleTextComp { titleObject->AddComponent<dae::TextComponent>() };
     titleTextComp->SetFont(defaultFont);
     titleTextComp->SetText("Programming 4 Assignment");
     titleTextComp->SetColor({ 255, 255, 0, 255 });
-    titleObject->SetPosition(292, 20);
+    titleObject->GetTransform().SetLocalPos(292, 20);
     scene.Add(std::move(titleObject));
 
+    // FPS counter
     auto fpsObject { std::make_unique<dae::GameObject>() };
-    fpsObject->SetPosition(20, 20);
+    fpsObject->AddComponent<dae::TextureComponent>();
+    fpsObject->GetTransform().SetLocalPos(20, 20);
     auto fpsTextComp { fpsObject->AddComponent<dae::TextComponent>() };
     fpsTextComp->SetFont(defaultFont);
     fpsTextComp->SetText("FPS: 0");
     fpsTextComp->SetColor({ 255, 255, 0, 255 });
-    //auto fpsCounterComp { fpsObject->AddComponent<dae::FPSCounter>() };
     fpsObject->AddComponent<dae::FPSCounter>();
     scene.Add(std::move(fpsObject));
+
+    // Scene graph demo
+    auto pivot { std::make_unique<dae::GameObject>() };
+    pivot->GetTransform().SetLocalPos(200, 300);
+
+    auto char1 { std::make_unique<dae::GameObject>() };
+    auto char1Tex { char1->AddComponent<dae::TextureComponent>() };
+    char1Tex->SetTexture("char1.png");
+    auto char1Rot { char1->AddComponent<dae::RotatorComponent>() };
+    char1Rot->SetAngularSpeed(1.5f);
+    char1Rot->SetRotationRadius(40.0f);
+
+    auto char2 { std::make_unique<dae::GameObject>() };
+    auto char2Tex { char2->AddComponent<dae::TextureComponent>() };
+    char2Tex->SetTexture("char2.png");
+    auto char2Rot { char2->AddComponent<dae::RotatorComponent>() };
+    char2Rot->SetAngularSpeed(-2.0f);
+    char2Rot->SetRotationRadius(80.0f);
+
+    char1->SetParent(pivot.get());
+    char2->SetParent(char1.get());
+
+    scene.Add(std::move(pivot));
+    scene.Add(std::move(char1));
+    scene.Add(std::move(char2));
 }
 
 int main(int, char* [])

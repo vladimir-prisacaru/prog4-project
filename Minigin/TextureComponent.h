@@ -9,7 +9,7 @@ namespace dae
     {
         public:
 
-        TextureComponent(GameObject* parent) : Component(parent) { }
+        TextureComponent(GameObject* owner) : Component(owner) { }
         virtual ~TextureComponent() = default;
 
         void Render() const override;

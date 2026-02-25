@@ -130,13 +130,22 @@ void dae::Minigin::Run(const std::function<void()>& load)
 
 void dae::Minigin::RunOneFrame()
 {
-    const auto currentTime { std::chrono::high_resolution_clock::now() };
+    using clock = std::chrono::steady_clock;
+    using seconds = std::chrono::duration<float>;
+    using milliseconds = std::chrono::milliseconds;
+
+
+
+    const auto frameStartTime { clock::now() };
 
     const float deltaTime {
-        std::chrono::duration<float>(currentTime - m_LastUpdateTime).count() };
+        seconds(frameStartTime - m_LastUpdateTime).count() };
 
-    m_LastUpdateTime = currentTime;
+    m_LastUpdateTime = frameStartTime;
+
     m_FixedUpdateLag += std::min(deltaTime, MAX_FRAME_TIME);
+
+
 
     m_Quit = !InputManager::GetInstance().ProcessInput();
 
@@ -151,12 +160,46 @@ void dae::Minigin::RunOneFrame()
 
     Renderer::GetInstance().Render();
 
-    const auto targetTime { currentTime +
-        std::chrono::duration_cast<std::chrono::high_resolution_clock::duration>(
-            std::chrono::duration<float>(FRAME_TIME)) };
 
-    const auto now { std::chrono::high_resolution_clock::now() };
 
-    if (now < targetTime)
-        std::this_thread::sleep_for(targetTime - now);
+    // Wait until the end of capped frame time
+
+    const auto frameTime { std::chrono::duration_cast<std::chrono::nanoseconds>(
+        seconds(FRAME_TIME)) };
+
+    const auto targetTime { frameStartTime + frameTime };
+
+
+
+    // This approach was too inaccurate (error of ~4FPS)
+    // sleep_for and sleep_until are not accurate enough for frame capping
+
+    //std::this_thread::sleep_until(targetTime);
+
+
+
+    // This approach is exactly accurate, but not optimized ("busy waiting")
+    while (clock::now() < targetTime)
+    {
+        std::this_thread::yield();
+    }
+
+
+
+    // This approach was too inaccurate (error of ~1FPS)
+    // An attempt to have a course phase with sleep_for and a fine phase with busy waiting
+    // 
+    //auto now { clock::now() };
+    //
+    //while (now < targetTime)
+    //{
+    //    auto remaining = targetTime - now;
+    //
+    //    if (remaining > milliseconds(1))
+    //        std::this_thread::sleep_for(milliseconds(1)); // coarse phase
+    //    else
+    //        std::this_thread::yield(); // fine phase
+    //
+    //    now = clock::now();
+    //}
 }

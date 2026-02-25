@@ -18,7 +18,6 @@ namespace dae
 
         float m_PrintInterval { 1.0f };
 
-        float m_SumFPS { };
         int m_NumFrames { };
 
         float m_AccTime { };

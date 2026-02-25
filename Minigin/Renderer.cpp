@@ -18,7 +18,7 @@ void dae::Renderer::Init(SDL_Window* window)
 
     #if defined(__EMSCRIPTEN__)
 
-    m_renderer = SDL_CreateRenderer(window, nullptr);
+    m_Renderer = SDL_CreateRenderer(window, nullptr);
 
     #else
 

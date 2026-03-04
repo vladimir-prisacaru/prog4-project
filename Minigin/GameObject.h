@@ -136,8 +136,11 @@ namespace dae
         /* Marks this object and all children for deletion */
         void MarkForDeletion();
 
-        /* Removes children scheduled for deletion */
+        /* Removes children scheduled for deletion from the children array */
         void RemoveChildrenMarkedForDeletion();
+
+        /* Marks chldren for deletion if marked for deletion */
+        void PropagateMarkedForDeletion();
 
         /* Adds a component of type T to the object and returns a non-owning pointer to it */
         template<typename T>

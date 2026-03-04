@@ -55,6 +55,11 @@ void Scene::CleanupMarked()
 {
     for (auto& obj : m_Objects)
     {
+        obj->PropagateMarkedForDeletion();
+    }
+
+    for (auto& obj : m_Objects)
+    {
         obj->RemoveChildrenMarkedForDeletion();
     }
 

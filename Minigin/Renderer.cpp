@@ -1,11 +1,15 @@
-﻿#include "Renderer.h"
-#include "SceneManager.h"
-#include "Texture2D.h"
+﻿#include <imgui.h>
+#include <backends/imgui_impl_sdl3.h>
+#include <backends/imgui_impl_sdlrenderer3.h>
+#include <implot.h>
 
 #include <stdexcept>
 #include <cstring>
 #include <iostream>
 
+#include "Renderer.h"
+#include "SceneManager.h"
+#include "Texture2D.h"
 
 
 void dae::Renderer::Init(SDL_Window* window)
@@ -33,21 +37,66 @@ void dae::Renderer::Init(SDL_Window* window)
         std::cout << "Failed to create the renderer: " << SDL_GetError() << "\n";
         throw std::runtime_error(std::string("SDL_CreateRenderer Error: ") + SDL_GetError());
     }
+
+
+    // Set up ImGui
+    ImGui::CreateContext();
+
+    ImGuiIO& io = ImGui::GetIO();
+    io.ConfigFlags |= ImGuiConfigFlags_DockingEnable; // optional
+    io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable; // optional
+
+    ImGui::StyleColorsDark();
+
+    ImGui_ImplSDL3_InitForSDLRenderer(window, m_Renderer);
+    ImGui_ImplSDLRenderer3_Init(m_Renderer);
+
+    // Set up ImPlot
+    ImPlot::CreateContext();
 }
 
 void dae::Renderer::Render() const
 {
+    // SDL clear
     const auto& color = GetBackgroundColor();
     SDL_SetRenderDrawColor(m_Renderer, color.r, color.g, color.b, color.a);
     SDL_RenderClear(m_Renderer);
 
+    // Drawing
     SceneManager::GetInstance().Render();
 
+    // ImGui render
+    if (m_CreatedNewFrameImGui)
+    {
+        ImGui::Render();
+        ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(), m_Renderer);
+    }
+
+    // SDL present
     SDL_RenderPresent(m_Renderer);
+
+    m_CreatedNewFrameImGui = false;
+}
+
+void dae::Renderer::ImGuiNewFrame()
+{
+    ImGui_ImplSDLRenderer3_NewFrame();
+    ImGui_ImplSDL3_NewFrame();
+    ImGui::NewFrame();
+
+    m_CreatedNewFrameImGui = true;
 }
 
 void dae::Renderer::Destroy()
 {
+    // Clean up ImPlot
+    ImPlot::DestroyContext();
+
+    // Clean up ImGui
+    ImGui_ImplSDLRenderer3_Shutdown();
+    ImGui_ImplSDL3_Shutdown();
+    ImGui::DestroyContext();
+
     if (m_Renderer != nullptr)
     {
         SDL_DestroyRenderer(m_Renderer);

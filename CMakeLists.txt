@@ -27,7 +27,7 @@ add_executable(${TARGET_NAME} ${TARGET_PARAM}
   Minigin/Texture2D.cpp
   Minigin/TextComponent.cpp
   Minigin/TextureComponent.cpp 
-  Minigin/FPSCounter.cpp "Minigin/RotatorComponent.cpp")
+  Minigin/FPSCounter.cpp "Minigin/RotatorComponent.cpp" "Minigin/ThrashTheCacheDemo.cpp")
 
 # enable c++20 features
 target_compile_features(${TARGET_NAME} PUBLIC cxx_std_20)
@@ -103,6 +103,69 @@ if(NOT SDL3_ttf_FOUND)
     FetchContent_MakeAvailable(SDL3_ttf)
   endif()
 endif()
+
+
+
+# -----------------------------
+# Dear ImGui
+# -----------------------------
+FetchContent_Declare(
+  imgui
+  GIT_REPOSITORY https://github.com/ocornut/imgui.git
+  GIT_TAG docking
+  GIT_SHALLOW TRUE
+  GIT_PROGRESS TRUE
+)
+
+FetchContent_MakeAvailable(imgui)
+
+# ImGui source files
+set(IMGUI_SOURCES
+  ${imgui_SOURCE_DIR}/imgui.cpp
+  ${imgui_SOURCE_DIR}/imgui_draw.cpp
+  ${imgui_SOURCE_DIR}/imgui_tables.cpp
+  ${imgui_SOURCE_DIR}/imgui_widgets.cpp
+  ${imgui_SOURCE_DIR}/imgui_demo.cpp
+
+  # SDL3 backend
+  ${imgui_SOURCE_DIR}/backends/imgui_impl_sdl3.cpp
+  ${imgui_SOURCE_DIR}/backends/imgui_impl_sdlrenderer3.cpp
+)
+
+target_sources(${TARGET_NAME} PRIVATE ${IMGUI_SOURCES})
+
+target_include_directories(${TARGET_NAME} PUBLIC
+  ${imgui_SOURCE_DIR}
+  ${imgui_SOURCE_DIR}/backends
+)
+
+
+
+# -----------------------------
+# ImPlot
+# -----------------------------
+FetchContent_Declare(
+  implot
+  GIT_REPOSITORY https://github.com/epezent/implot.git
+  GIT_TAG master
+  GIT_SHALLOW TRUE
+  GIT_PROGRESS TRUE
+)
+
+FetchContent_MakeAvailable(implot)
+
+set(IMPLOT_SOURCES
+  ${implot_SOURCE_DIR}/implot.cpp
+  ${implot_SOURCE_DIR}/implot_items.cpp
+)
+
+target_sources(${TARGET_NAME} PRIVATE ${IMPLOT_SOURCES})
+
+target_include_directories(${TARGET_NAME} PUBLIC
+  ${implot_SOURCE_DIR}
+)
+
+
 
 if (WIN32)
   # Add VLD (Visual Leak Detector) for memory leak detection on Windows

@@ -5,6 +5,7 @@
 #include "TextureComponent.h"
 #include "FPSCounter.h"
 #include "RotatorComponent.h"
+#include "ThrashTheCacheDemo.h"
 #include "Scene.h"
 
 #include <SDL3/SDL.h>
@@ -83,6 +84,11 @@ static void load()
     scene.Add(std::move(pivot));
     scene.Add(std::move(char1));
     scene.Add(std::move(char2));
+
+    // Thrash the cache demo:
+    auto cacheObj { std::make_unique<dae::GameObject>() };
+    cacheObj->AddComponent<dae::ThrashTheCacheDemo>();
+    scene.Add(std::move(cacheObj));
 }
 
 int main(int, char* [])

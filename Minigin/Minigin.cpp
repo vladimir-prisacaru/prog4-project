@@ -148,6 +148,8 @@ void dae::Minigin::RunOneFrame()
 
     m_Quit = !InputManager::GetInstance().ProcessInput();
 
+    Renderer::GetInstance().ImGuiNewFrame();
+
     while (m_FixedUpdateLag >= FIXED_TIMESTEP)
     {
         SceneManager::GetInstance().FixedUpdate(FIXED_TIMESTEP);

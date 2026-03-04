@@ -15,6 +15,8 @@ namespace dae
 
         void Init(SDL_Window* window);
         void Render() const;
+        /* Call before Render() to create a new frame for ImGui */
+        void ImGuiNewFrame();
         void Destroy();
 
         void RenderTexture(const Texture2D& texture, float x, float y) const;
@@ -30,5 +32,7 @@ namespace dae
         SDL_Renderer* m_Renderer { };
         SDL_Window* m_Window { };
         SDL_Color m_ClearColor { };
+
+        mutable bool m_CreatedNewFrameImGui { };
     };
 }

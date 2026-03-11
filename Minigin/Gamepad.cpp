@@ -118,11 +118,11 @@ class Gamepad::GamepadImpl final
 
 
 
-Gamepad::GamePad(unsigned int controllerIndex)
+Gamepad::Gamepad(unsigned int controllerIndex)
     : m_pImpl { std::make_unique<GamepadImpl>(controllerIndex) }
 { }
 
-Gamepad::~GamePad() = default;
+Gamepad::~Gamepad() = default;
 
 void Gamepad::ProcessInput()
 {

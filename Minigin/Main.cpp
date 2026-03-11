@@ -26,26 +26,26 @@ using namespace dae;
 
 static void load()
 {
-    auto& scene = dae::SceneManager::GetInstance().CreateScene();
-    auto defaultFont { dae::ResourceManager::GetInstance().LoadFont("Lingua.otf", 36) };
+    auto& scene = SceneManager::GetInstance().CreateScene();
+    auto defaultFont { ResourceManager::GetInstance().LoadFont("Lingua.otf", 36) };
 
     // Background
-    auto bgObj { std::make_unique<dae::GameObject>() };
-    auto bgTextureComp { bgObj->AddComponent<dae::TextureComponent>() };
+    auto bgObj { std::make_unique<GameObject>() };
+    auto bgTextureComp { bgObj->AddComponent<TextureComponent>() };
     bgTextureComp->SetTexture("background.png");
     scene.Add(std::move(bgObj));
 
     // Logo
-    auto logoObj { std::make_unique<dae::GameObject>() };
+    auto logoObj { std::make_unique<GameObject>() };
     logoObj->GetTransform().SetLocalPos(358, 180);
-    auto logoTextureComp { logoObj->AddComponent<dae::TextureComponent>() };
+    auto logoTextureComp { logoObj->AddComponent<TextureComponent>() };
     logoTextureComp->SetTexture("logo.png");
     scene.Add(std::move(logoObj));
 
     // Title
-    auto titleObject { std::make_unique<dae::GameObject>() };
-    titleObject->AddComponent<dae::TextureComponent>();
-    auto titleTextComp { titleObject->AddComponent<dae::TextComponent>() };
+    auto titleObject { std::make_unique<GameObject>() };
+    titleObject->AddComponent<TextureComponent>();
+    auto titleTextComp { titleObject->AddComponent<TextComponent>() };
     titleTextComp->SetFont(defaultFont);
     titleTextComp->SetText("Programming 4 Assignment");
     titleTextComp->SetColor({ 255, 255, 0, 255 });
@@ -53,14 +53,14 @@ static void load()
     scene.Add(std::move(titleObject));
 
     // FPS counter
-    auto fpsObject { std::make_unique<dae::GameObject>() };
-    fpsObject->AddComponent<dae::TextureComponent>();
+    auto fpsObject { std::make_unique<GameObject>() };
+    fpsObject->AddComponent<TextureComponent>();
     fpsObject->GetTransform().SetLocalPos(20, 20);
-    auto fpsTextComp { fpsObject->AddComponent<dae::TextComponent>() };
+    auto fpsTextComp { fpsObject->AddComponent<TextComponent>() };
     fpsTextComp->SetFont(defaultFont);
     fpsTextComp->SetText("FPS: 0");
     fpsTextComp->SetColor({ 255, 255, 0, 255 });
-    fpsObject->AddComponent<dae::FPSCounter>();
+    fpsObject->AddComponent<FPSCounter>();
     scene.Add(std::move(fpsObject));
 
     // Scene graph demo
@@ -94,13 +94,13 @@ static void load()
     //scene.Add(std::move(cacheObj));
 
     // Movement input demo:
-    dae::InputManager& input { dae::InputManager::GetInstance() };
+    dae::InputManager& input { InputManager::GetInstance() };
 
-    auto character1 { std::make_unique<dae::GameObject>() };
+    auto character1 { std::make_unique<GameObject>() };
     character1->GetTransform().SetLocalPos(200, 300);
-    auto character1Tex { character1->AddComponent<dae::TextureComponent>() };
+    auto character1Tex { character1->AddComponent<TextureComponent>() };
     character1Tex->SetTexture("char1.png");
-    auto movement1 { character1->AddComponent<dae::MovementComponent>() };
+    auto movement1 { character1->AddComponent<MovementComponent>() };
     movement1->SetSpeed(10.0f);
     input.AddControllerCommand(0, ControllerButton::DPadUp, KeyState::Pressed,
         std::make_unique<MoveCommand>(movement1, glm::vec3 { 0.0f, -1.0f, 0.0f }));

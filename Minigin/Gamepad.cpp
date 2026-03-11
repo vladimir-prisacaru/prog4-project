@@ -35,11 +35,11 @@ static SDL_GamepadButton ToSDLButton(ControllerButton button)
     }
 }
 
-class GamePad::GamePadImpl final
+class Gamepad::GamepadImpl final
 {
     public:
 
-    explicit GamePadImpl(unsigned int controllerIndex)
+    explicit GamepadImpl(unsigned int controllerIndex)
         : m_ControllerIndex { controllerIndex }
     {
         std::fill(std::begin(m_CurrentButtons), std::end(m_CurrentButtons), false);
@@ -48,7 +48,7 @@ class GamePad::GamePadImpl final
         TryOpen();
     }
 
-    ~GamePadImpl()
+    ~GamepadImpl()
     {
         if (m_pGamepad) { SDL_CloseGamepad(m_pGamepad); m_pGamepad = nullptr; }
     }
@@ -118,13 +118,13 @@ class GamePad::GamePadImpl final
 
 
 
-GamePad::GamePad(unsigned int controllerIndex)
-    : m_pImpl { std::make_unique<GamePadImpl>(controllerIndex) }
+Gamepad::GamePad(unsigned int controllerIndex)
+    : m_pImpl { std::make_unique<GamepadImpl>(controllerIndex) }
 { }
 
-GamePad::~GamePad() = default;
+Gamepad::~GamePad() = default;
 
-void GamePad::ProcessInput()
+void Gamepad::ProcessInput()
 {
     m_pImpl->Update();
     if (!m_pImpl->IsConnected()) return;
@@ -148,17 +148,17 @@ void GamePad::ProcessInput()
     }
 }
 
-void dae::GamePad::AddCommand(ControllerButton button, KeyState state, std::unique_ptr<InputCommand> command)
+void Gamepad::AddCommand(ControllerButton button, KeyState state, std::unique_ptr<InputCommand> command)
 {
     m_pImpl->m_Bindings[{button, state}] = std::move(command);
 }
 
-void dae::GamePad::RemoveCommand(ControllerButton button, KeyState state)
+void Gamepad::RemoveCommand(ControllerButton button, KeyState state)
 {
     m_pImpl->m_Bindings.erase({ button, state });
 }
 
-bool dae::GamePad::IsConnected() const { return m_pImpl->IsConnected(); }
+bool Gamepad::IsConnected() const { return m_pImpl->IsConnected(); }
 
 
 
@@ -192,11 +192,11 @@ static WORD ToXInputButton(ControllerButton button)
     }
 }
 
-class Gamepad::GamePadImpl final
+class Gamepad::GamepadImpl final
 {
     public:
 
-    explicit GamePadImpl(unsigned int controllerIndex)
+    explicit GamepadImpl(unsigned int controllerIndex)
         : m_ControllerIndex { controllerIndex }
     {
         ZeroMemory(&m_CurrentState, sizeof(XINPUT_STATE));
@@ -244,7 +244,7 @@ class Gamepad::GamePadImpl final
 
 
 Gamepad::Gamepad(unsigned int controllerIndex)
-    : m_pImpl { std::make_unique<GamePadImpl>(controllerIndex) }
+    : m_pImpl { std::make_unique<GamepadImpl>(controllerIndex) }
 { }
 
 Gamepad::~Gamepad() = default;

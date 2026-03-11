@@ -103,13 +103,13 @@ static void load()
     auto movement1 { character1->AddComponent<dae::MovementComponent>() };
     movement1->SetSpeed(10.0f);
     input.AddControllerCommand(0, ControllerButton::DPadUp, KeyState::Pressed,
-        std::move(std::make_unique<MoveCommand>(movement1, glm::vec3 { 0.0f, -1.0f, 0.0f })));
+        std::make_unique<MoveCommand>(movement1, glm::vec3 { 0.0f, -1.0f, 0.0f }));
     input.AddControllerCommand(0, ControllerButton::DPadDown, KeyState::Pressed,
-        std::move(std::make_unique<MoveCommand>(movement1, glm::vec3 { 0.0f, 1.0f, 0.0f })));
+        std::make_unique<MoveCommand>(movement1, glm::vec3 { 0.0f, 1.0f, 0.0f }));
     input.AddControllerCommand(0, ControllerButton::DPadLeft, KeyState::Pressed,
-        std::move(std::make_unique<MoveCommand>(movement1, glm::vec3 { -1.0f, 0.0f, 0.0f })));
+        std::make_unique<MoveCommand>(movement1, glm::vec3 { -1.0f, 0.0f, 0.0f }));
     input.AddControllerCommand(0, ControllerButton::DPadRight, KeyState::Pressed,
-        std::move(std::make_unique<MoveCommand>(movement1, glm::vec3 { 1.0f, 0.0f, 0.0f })));
+        std::make_unique<MoveCommand>(movement1, glm::vec3 { 1.0f, 0.0f, 0.0f }));
 
     auto character2 { std::make_unique<GameObject>() };
     character2->GetTransform().SetLocalPos(300, 300);
@@ -118,13 +118,13 @@ static void load()
     auto movement2 { character2->AddComponent<MovementComponent>() };
     movement2->SetSpeed(10.0f);
     input.AddKeyboardCommand(SDL_SCANCODE_W, KeyState::Pressed,
-        std::move(std::make_unique<MoveCommand>(movement2, glm::vec3 { 0.0f, -1.0f, 0.0f })));
+        std::make_unique<MoveCommand>(movement2, glm::vec3 { 0.0f, -1.0f, 0.0f }));
     input.AddKeyboardCommand(SDL_SCANCODE_S, KeyState::Pressed,
-        std::move(std::make_unique<MoveCommand>(movement2, glm::vec3 { 0.0f, 1.0f, 0.0f })));
+        std::make_unique<MoveCommand>(movement2, glm::vec3 { 0.0f, 1.0f, 0.0f }));
     input.AddKeyboardCommand(SDL_SCANCODE_A, KeyState::Pressed,
-        std::move(std::make_unique<MoveCommand>(movement2, glm::vec3 { -1.0f, 0.0f, 0.0f })));
+        std::make_unique<MoveCommand>(movement2, glm::vec3 { -1.0f, 0.0f, 0.0f }));
     input.AddKeyboardCommand(SDL_SCANCODE_D, KeyState::Pressed,
-        std::move(std::make_unique<MoveCommand>(movement2, glm::vec3 { 1.0f, 0.0f, 0.0f })));
+        std::make_unique<MoveCommand>(movement2, glm::vec3 { 1.0f, 0.0f, 0.0f }));
 
     scene.Add(std::move(character1));
     scene.Add(std::move(character2));

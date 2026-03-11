@@ -1,6 +1,6 @@
 #pragma once
 #include "Singleton.h"
-#include "GamePad.h"
+#include "Gamepad.h"
 
 #include <memory>
 #include <map>

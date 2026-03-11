@@ -59,7 +59,6 @@ namespace dae
         void RunBenchmark2(int size);
         void RunBenchmark3(int size);
 
-        /* Returns the average of values after removing outliers via IQR */
-        static double AverageWithoutOutliers(std::vector<double>& samples);
+        static double AverageWithoutOutliers(const std::vector<double>& samples);
     };
 }

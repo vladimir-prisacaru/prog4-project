@@ -209,7 +209,7 @@ void dae::ThrashTheCacheDemo::RunBenchmark3(int size)
     }
 }
 
-double dae::ThrashTheCacheDemo::AverageWithoutOutliers(std::vector<double>& samples)
+double dae::ThrashTheCacheDemo::AverageWithoutOutliers(const std::vector<double>& samples)
 {
     if (samples.size() <= 2)
     {
@@ -217,24 +217,7 @@ double dae::ThrashTheCacheDemo::AverageWithoutOutliers(std::vector<double>& samp
         return sum / static_cast<double>(samples.size());
     }
 
-    std::sort(samples.begin(), samples.end());
-
-    const size_t n = samples.size();
-    const double q1 = samples[n / 4];
-    const double q3 = samples[(3 * n) / 4];
-    const double iqr = q3 - q1;
-
-    const double lower = q1 - 1.5 * iqr;
-    const double upper = q3 + 1.5 * iqr;
-
-    std::vector<double> filtered;
-    filtered.reserve(n);
-    std::copy_if(samples.begin(), samples.end(), std::back_inserter(filtered),
-        [lower, upper](double v) { return v >= lower && v <= upper; });
-
-    if (filtered.empty())
-        filtered = samples;
-
-    const double sum = std::accumulate(filtered.begin(), filtered.end(), 0.0);
-    return sum / static_cast<double>(filtered.size());
+    auto [min, max] { std::minmax_element(samples.begin(), samples.end()) };
+    auto sum = std::accumulate(samples.begin(), samples.end(), 0.0) - (*min) - (*max);
+    return sum / static_cast<double>(samples.size() - 2);
 }

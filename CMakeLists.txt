@@ -27,7 +27,7 @@ add_executable(${TARGET_NAME} ${TARGET_PARAM}
   Minigin/Texture2D.cpp
   Minigin/TextComponent.cpp
   Minigin/TextureComponent.cpp 
-  Minigin/FPSCounter.cpp "Minigin/RotatorComponent.cpp" "Minigin/ThrashTheCacheDemo.cpp")
+  Minigin/FPSCounter.cpp "Minigin/RotatorComponent.cpp" "Minigin/ThrashTheCacheDemo.cpp" "Minigin/Gamepad.cpp" "Minigin/MovementComponent.cpp")
 
 # enable c++20 features
 target_compile_features(${TARGET_NAME} PUBLIC cxx_std_20)
@@ -187,6 +187,10 @@ target_link_libraries("${TARGET_NAME}" PUBLIC
   glm::glm
   ${VLD_LIBRARIES}
 )
+
+if (WIN32)
+  target_link_libraries("${TARGET_NAME}" PUBLIC xinput)
+endif()
 
 if(MSVC)
   # compile at warning level 4 + treat warnings as errors

@@ -22,7 +22,7 @@ namespace dae
             UnlockAchievement("ACH_WIN_ONE_GAME");
     }
 
-    void SteamAchievementObserver::UnlockAchievement(const char* achievementId)
+    void SteamAchievementObserver::UnlockAchievement([[maybe_unused]] const char* achievementId)
     {
         #if USE_STEAMWORKS
 

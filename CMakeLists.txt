@@ -27,7 +27,7 @@ add_executable(${TARGET_NAME} ${TARGET_PARAM}
   Minigin/Texture2D.cpp
   Minigin/TextComponent.cpp
   Minigin/TextureComponent.cpp 
-  Minigin/FPSCounter.cpp "Minigin/RotatorComponent.cpp" "Minigin/ThrashTheCacheDemo.cpp" "Minigin/Gamepad.cpp" "Minigin/MovementComponent.cpp")
+  Minigin/FPSCounter.cpp "Minigin/RotatorComponent.cpp" "Minigin/ThrashTheCacheDemo.cpp" "Minigin/Gamepad.cpp"  "Minigin/EventManager.cpp" "Minigin/HealthComponent.cpp" "Minigin/ScoreComponent.cpp" "Minigin/LivesDisplayComponent.cpp" "Minigin/PointsDisplayComponent.cpp" "Minigin/SteamAchievementObserver.cpp")
 
 # enable c++20 features
 target_compile_features(${TARGET_NAME} PUBLIC cxx_std_20)

@@ -3,6 +3,7 @@
 #include "SceneManager.h"
 #include "Renderer.h"
 #include "ResourceManager.h"
+#include "EventManager.h"
 
 #include <stdexcept>
 #include <sstream>
@@ -14,6 +15,13 @@
     #define NOMINMAX
     #include <windows.h>
 #endif // WIN32
+
+#if USE_STEAMWORKS
+    #pragma warning (push)
+    #pragma warning (disable:4996)
+    #include <steam_api.h>
+    #pragma warning (pop)
+#endif // USE_STEAMWORKS
 
 #include <SDL3/SDL.h>
 //#include <SDL3_image/SDL_image.h>
@@ -97,11 +105,24 @@ dae::Minigin::Minigin(const std::filesystem::path& dataPath)
     Renderer::GetInstance().Init(g_Window);
 
     ResourceManager::GetInstance().Init(dataPath);
+
+#if USE_STEAMWORKS
+    if (!SteamAPI_Init())
+        throw std::runtime_error(
+            std::string("Fatal Error - Steam must be running to play this game"
+                " (SteamAPI_Init() failed)."));
+    m_SteamInitialized = true;
+#endif
 }
 
 dae::Minigin::~Minigin()
 {
     Renderer::GetInstance().Destroy();
+
+    #if USE_STEAMWORKS
+    if (m_SteamInitialized)
+        SteamAPI_Shutdown();
+    #endif
 
     SDL_DestroyWindow(g_Window);
 
@@ -148,6 +169,10 @@ void dae::Minigin::RunOneFrame()
 
     m_Quit = !InputManager::GetInstance().ProcessInput();
 
+#if USE_STEAMWORKS
+    SteamAPI_RunCallbacks();
+#endif
+
     Renderer::GetInstance().ImGuiNewFrame();
 
     while (m_FixedUpdateLag >= FIXED_TIMESTEP)
@@ -158,6 +183,8 @@ void dae::Minigin::RunOneFrame()
     }
 
     SceneManager::GetInstance().Update(deltaTime);
+
+    EventManager::GetInstance().FlushEvents();
 
     Renderer::GetInstance().Render();
 
@@ -204,4 +231,10 @@ void dae::Minigin::RunOneFrame()
     //
     //    now = clock::now();
     //}
+
+    // Cleanup on application exit
+    if (m_Quit)
+    {
+        SceneManager::GetInstance().Cleanup();
+    }
 }

@@ -19,6 +19,9 @@ namespace dae
         void FixedUpdate(float deltaTime);
         void Render();
 
+        /* Called only when application is being closed */
+        void Cleanup();
+
         private:
 
         friend class Singleton<SceneManager>;

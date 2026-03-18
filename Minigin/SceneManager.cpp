@@ -28,6 +28,11 @@ void dae::SceneManager::Render()
     }
 }
 
+void dae::SceneManager::Cleanup()
+{
+    m_scenes.clear();
+}
+
 dae::Scene& dae::SceneManager::CreateScene()
 {
     m_scenes.emplace_back(new Scene());

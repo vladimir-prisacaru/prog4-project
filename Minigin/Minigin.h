@@ -34,5 +34,9 @@ namespace dae
             std::chrono::high_resolution_clock::now() };
 
         float m_FixedUpdateLag { };
+
+        #if USE_STEAMWORKS
+        bool m_SteamInitialized { };
+        #endif
     };
 }

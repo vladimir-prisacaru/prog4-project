@@ -7,13 +7,36 @@ namespace dae
 {
     SteamAchievementObserver::SteamAchievementObserver(GameObject* owner) : Component(owner)
     {
-        EventManager::GetInstance().AddListener(
-            GameEvent::ScoreThresholdReached, this);
+        #if USE_STEAMWORKS
+
+        if (!SteamUserStats())
+        {
+            assert(false && "No steam users stats!");
+
+            return;
+        }
+
+        bool achievedAlready = false;
+
+        bool achievementExists =
+            SteamUserStats()->GetAchievement("ACH_WIN_ONE_GAME", &achievedAlready);
+
+        if (achievementExists && !achievedAlready)
+        {
+            EventManager::GetInstance().AddListener(
+                GameEvent::ScoreThresholdReached, this);
+        }
+
+        #endif
     }
 
     SteamAchievementObserver::~SteamAchievementObserver()
     {
+        #if USE_STEAMWORKS
+
         EventManager::GetInstance().RemoveListener(GameEvent::ScoreThresholdReached, this);
+
+        #endif
     }
 
     void SteamAchievementObserver::Notify(const Event& event)
@@ -26,7 +49,12 @@ namespace dae
     {
         #if USE_STEAMWORKS
 
-        if (!SteamUserStats()) throw std::runtime_error("");
+        if (!SteamUserStats())
+        {
+            assert(false && "No steam users stats!");
+
+            return;
+        }
 
         SteamUserStats()->SetAchievement(achievementId);
         SteamUserStats()->StoreStats();

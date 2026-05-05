@@ -15,7 +15,7 @@ void Scene::Remove(const GameObject& object)
     for (const auto& obj : m_Objects)
     {
         if (obj.get() == &object)
-            obj->MarkForDeletion();
+            obj->Destroy();
     }
 }
 
@@ -23,7 +23,7 @@ void Scene::RemoveAll()
 {
     for (const auto& obj : m_Objects)
     {
-        obj->MarkForDeletion();
+        obj->Destroy();
     }
 }
 
@@ -51,7 +51,7 @@ void Scene::Render() const
     }
 }
 
-void Scene::CleanupMarked()
+void Scene::CleanupDestroyedObjects()
 {
     for (auto& obj : m_Objects)
     {
@@ -65,7 +65,7 @@ void Scene::CleanupMarked()
 
     for (auto it { m_Objects.begin() }; it != m_Objects.end();)
     {
-        if ((*it)->IsMarkedForDeletion())
+        if ((*it)->IsDestroyed())
             it = m_Objects.erase(it);
         else
             it++;

@@ -131,10 +131,10 @@ namespace dae
         bool IsChild(GameObject* obj) const;
 
         /* Returns true if this object is marked for deletion */
-        bool IsMarkedForDeletion() const;
+        bool IsDestroyed() const;
 
         /* Marks this object and all children for deletion */
-        void MarkForDeletion();
+        void Destroy();
 
         /* Removes children scheduled for deletion from the children array */
         void RemoveChildrenMarkedForDeletion();

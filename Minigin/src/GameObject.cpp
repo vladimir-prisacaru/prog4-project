@@ -194,12 +194,12 @@ bool dae::GameObject::IsChild(GameObject* obj) const
     );
 }
 
-bool dae::GameObject::IsMarkedForDeletion() const
+bool dae::GameObject::IsDestroyed() const
 {
     return m_MarkedForDeletion;
 }
 
-void dae::GameObject::MarkForDeletion()
+void dae::GameObject::Destroy()
 {
     m_MarkedForDeletion = true;
 }
@@ -208,7 +208,7 @@ void dae::GameObject::RemoveChildrenMarkedForDeletion()
 {
     for (auto it { m_Children.begin() }; it != m_Children.end();)
     {
-        if ((*it)->IsMarkedForDeletion())
+        if ((*it)->IsDestroyed())
             it = m_Children.erase(it);
         else
             it++;
@@ -222,6 +222,6 @@ void dae::GameObject::PropagateMarkedForDeletion()
 
     for (auto& child : m_Children)
     {
-        child->MarkForDeletion();
+        child->Destroy();
     }
 }

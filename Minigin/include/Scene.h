@@ -20,7 +20,7 @@ namespace dae
         void FixedUpdate(float deltaTime);
         void Render() const;
 
-        void CleanupMarked();
+        void CleanupDestroyedObjects();
 
         ~Scene() = default;
         Scene(const Scene& other) = delete;

@@ -4,22 +4,26 @@ project(Game)
 # =====================================================================
 # Executable name & subsystem
 # =====================================================================
+set(SOURCES
+    src/Main.cpp
+    src/SoundTestComponent.cpp
+    src/RotatorComponent.cpp
+    src/ThrashTheCacheDemo.cpp
+    src/HealthComponent.cpp
+    src/ScoreComponent.cpp
+    src/LivesDisplayComponent.cpp
+    src/PointsDisplayComponent.cpp
+    src/SteamAchievementObserver.cpp
+)
+
+
 if(EMSCRIPTEN)
   set(GAME_TARGET game_web)
-  add_executable(${GAME_TARGET}
-    src/Main.cpp
-  )
+  add_executable(${GAME_TARGET} ${SOURCES})
 else()
   set(GAME_TARGET game)
-  add_executable(${GAME_TARGET} WIN32
-    src/Main.cpp
-  )
+  add_executable(${GAME_TARGET} WIN32 ${SOURCES})
 endif()
-
-# =====================================================================
-# Add your game source files here as they grow, e.g.:
-#   target_sources(${GAME_TARGET} PRIVATE src/GameState.cpp src/Player.cpp)
-# =====================================================================
 
 # =====================================================================
 # Include directories (game-private sources)
@@ -43,7 +47,7 @@ if(WIN32)
   target_link_libraries(${GAME_TARGET} PRIVATE xinput)
 
   # Copy SDL runtime DLLs next to the executable
-  foreach(dllTarget IN ITEMS SDL3::SDL3 SDL3_ttf::SDL3_ttf)
+  foreach(dllTarget IN ITEMS SDL3::SDL3 SDL3_ttf::SDL3_ttf SDL3_mixer::SDL3_mixer)
     add_custom_command(TARGET ${GAME_TARGET} POST_BUILD
       COMMAND ${CMAKE_COMMAND} -E copy_if_different
         "$<TARGET_FILE:${dllTarget}>"
@@ -86,6 +90,7 @@ elseif(APPLE)
     COMMAND "${CMAKE_COMMAND}" -E make_directory "$<TARGET_BUNDLE_DIR:${GAME_TARGET}>/Contents/Frameworks"
     COMMAND "${CMAKE_COMMAND}" -E copy_if_different "$<TARGET_FILE:SDL3::SDL3-shared>"      "$<TARGET_BUNDLE_DIR:${GAME_TARGET}>/Contents/Frameworks/"
     COMMAND "${CMAKE_COMMAND}" -E copy_if_different "$<TARGET_FILE:SDL3_ttf::SDL3_ttf-shared>" "$<TARGET_BUNDLE_DIR:${GAME_TARGET}>/Contents/Frameworks/"
+    COMMAND "${CMAKE_COMMAND}" -E copy_if_different "$<TARGET_FILE:SDL3_mixer::SDL3_mixer-shared>" "$<TARGET_BUNDLE_DIR:${GAME_TARGET}>/Contents/Frameworks/"
     COMMAND install_name_tool -change "@rpath/libSDL3_ttf.0.dylib" "@executable_path/../Frameworks/libSDL3_ttf.0.2.2.dylib" "$<TARGET_FILE:${GAME_TARGET}>"
     COMMAND install_name_tool -change "@rpath/libSDL3.0.dylib"     "@executable_path/../Frameworks/libSDL3.0.dylib"          "$<TARGET_FILE:${GAME_TARGET}>"
   )

@@ -5,9 +5,7 @@ if(EMSCRIPTEN)
   message("Using Emscripten!")
 endif()
 
-# =====================================================================
 # Global C++ standard
-# =====================================================================
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
@@ -88,6 +86,35 @@ if(NOT SDL3_ttf_FOUND)
   endif()
 endif()
 
+# --- SDL3_mixer ----------------------------------------------------------
+find_package(SDL3_mixer 3.2 CONFIG QUIET)
+if(NOT SDL3_mixer_FOUND)
+  FetchContent_Declare(
+    SDL3_mixer
+    GIT_REPOSITORY https://github.com/libsdl-org/SDL_mixer.git
+    GIT_TAG        release-3.2.0
+    GIT_SHALLOW    TRUE
+    GIT_PROGRESS   TRUE
+    GIT_SUBMODULES_RECURSE TRUE
+    )
+  set(SDL3MIXER_INSTALL OFF)
+  set(SDLMIXER_VENDORED ON)   # vendor codecs so no system deps are needed
+    set(SDLMIXER_FLAC        OFF)
+    set(SDLMIXER_GME         OFF)
+    set(SDLMIXER_MOD         OFF)
+    set(SDLMIXER_MOD_XMP     OFF)
+    set(SDLMIXER_MIDI        OFF)
+    set(SDLMIXER_OPUS        OFF)
+    set(SDLMIXER_MP3         OFF)
+    set(SDLMIXER_WAVPACK     OFF)
+    set(SDLMIXER_VORBIS      VORBISFILE) # Keep only WAV (always on) and OGG/Vorbis
+  if(EMSCRIPTEN)
+    add_compile_options(-sUSE_SDL_MIXER=1)
+    add_link_options(-sUSE_SDL_MIXER=1)
+  endif()
+  FetchContent_MakeAvailable(SDL3_mixer)
+endif()
+
 # --- Dear ImGui ----------------------------------------------------------
 FetchContent_Declare(
   imgui
@@ -101,7 +128,7 @@ FetchContent_MakeAvailable(imgui)
 # Expose the fetched source dir as a cache variable so sub-projects can use it
 set(IMGUI_SOURCE_DIR ${imgui_SOURCE_DIR} CACHE INTERNAL "ImGui source directory")
 
-# --- ImPlot --------------------------------------------------------------
+# ImPlot
 FetchContent_Declare(
   implot
   GIT_REPOSITORY https://github.com/epezent/implot.git
@@ -113,17 +140,26 @@ FetchContent_MakeAvailable(implot)
 
 set(IMPLOT_SOURCE_DIR ${implot_SOURCE_DIR} CACHE INTERNAL "ImPlot source directory")
 
-# --- VLD (Windows only) --------------------------------------------------
+# tinyxml2
+FetchContent_Declare(
+    tinyxml2
+    GIT_REPOSITORY https://github.com/leethomason/tinyxml2.git
+    GIT_TAG        11.0.0
+    GIT_SHALLOW    TRUE
+    GIT_PROGRESS   TRUE
+)
+
+FetchContent_MakeAvailable(tinyxml2)
+
+# VLD (Windows only)
 if(WIN32)
   find_package(VLD CONFIG)
 endif()
 
-# --- Steamworks ----------------------------------------------------------
+# Steamworks
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/steam")
 find_package(Steamworks QUIET)
 
-# =====================================================================
 # Sub-projects
-# =====================================================================
 add_subdirectory(Minigin)
 add_subdirectory(Game)

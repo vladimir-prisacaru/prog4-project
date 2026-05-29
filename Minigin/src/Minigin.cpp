@@ -4,6 +4,7 @@
 #include "Renderer.h"
 #include "ResourceManager.h"
 #include "EventManager.h"
+#include "ServiceLocator.h"
 
 #include <stdexcept>
 #include <sstream>
@@ -236,5 +237,6 @@ void dae::Minigin::RunOneFrame()
     if (m_Quit)
     {
         SceneManager::GetInstance().Cleanup();
+        ServiceLocator::Cleanup();
     }
 }

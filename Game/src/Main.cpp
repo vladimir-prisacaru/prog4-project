@@ -4,17 +4,16 @@
 #include "TextComponent.h"
 #include "TextureComponent.h"
 #include "FPSCounter.h"
-#include "RotatorComponent.h"
-//#include "ThrashTheCacheDemo.h"
 #include "InputManager.h"
 #include "Scene.h"
-#include "EventManager.h"
 #include "HealthComponent.h"
 #include "ScoreComponent.h"
 #include "LivesDisplayComponent.h"
 #include "PointsDisplayComponent.h"
-#include "SteamAchievementObserver.h"
 #include "GameCommands.h"
+#include "ServiceLocator.h"
+#include "SoundSystemSDL.h"
+#include "SoundTestComponent.h"
 
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
@@ -33,6 +32,8 @@ using namespace dae;
 
 static void load()
 {
+    ServiceLocator::RegisterSoundSystem(std::make_unique<SoundSystemSDL>("Data/audioclips"));
+
     auto& scene = SceneManager::GetInstance().CreateScene();
     auto defaultFont { ResourceManager::GetInstance().LoadFont("Lingua.otf", 36) };
 
@@ -231,10 +232,13 @@ static void load()
     scene.Add(std::move(player1));
     scene.Add(std::move(player2));
 
-    auto steamAchievementObj { std::make_unique<GameObject>() };
-    steamAchievementObj->AddComponent<SteamAchievementObserver>();
+    //auto steamAchievementObj { std::make_unique<GameObject>() };
+    //steamAchievementObj->AddComponent<SteamAchievementObserver>();
+    //scene.Add(std::move(steamAchievementObj));
 
-    scene.Add(std::move(steamAchievementObj));
+    //auto soundTestObj { std::make_unique<GameObject>() };
+    //soundTestObj->AddComponent<SoundTestComponent>();
+    //scene.Add(std::move(soundTestObj));
 }
 
 int main(int, char* [])

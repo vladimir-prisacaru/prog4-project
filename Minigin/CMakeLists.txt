@@ -1,10 +1,9 @@
 cmake_minimum_required(VERSION 3.26)
 project(MiniginLib)
 
-# =====================================================================
-# Source files
-# Note: Main.cpp is intentionally excluded — it lives in Game/
-# =====================================================================
+# --------------------
+# --- Source files ---
+# --------------------
 set(MINIGIN_SOURCES
   src/Font.cpp
   src/GameObject.cpp
@@ -18,28 +17,23 @@ set(MINIGIN_SOURCES
   src/TextComponent.cpp
   src/TextureComponent.cpp
   src/FPSCounter.cpp
-  src/RotatorComponent.cpp
-  src/ThrashTheCacheDemo.cpp
   src/Gamepad.cpp
   src/EventManager.cpp
-  src/HealthComponent.cpp
-  src/ScoreComponent.cpp
-  src/LivesDisplayComponent.cpp
-  src/PointsDisplayComponent.cpp
-  src/SteamAchievementObserver.cpp
+  src/ServiceLocator.cpp
+  src/SoundSystemSDL.cpp
 
   # Dear ImGui (compiled into the engine library)
-  ${IMGUI_SOURCE_DIR}/imgui.cpp
-  ${IMGUI_SOURCE_DIR}/imgui_draw.cpp
-  ${IMGUI_SOURCE_DIR}/imgui_tables.cpp
-  ${IMGUI_SOURCE_DIR}/imgui_widgets.cpp
-  ${IMGUI_SOURCE_DIR}/imgui_demo.cpp
-  ${IMGUI_SOURCE_DIR}/backends/imgui_impl_sdl3.cpp
-  ${IMGUI_SOURCE_DIR}/backends/imgui_impl_sdlrenderer3.cpp
+  ${imgui_SOURCE_DIR}/imgui.cpp
+  ${imgui_SOURCE_DIR}/imgui_draw.cpp
+  ${imgui_SOURCE_DIR}/imgui_tables.cpp
+  ${imgui_SOURCE_DIR}/imgui_widgets.cpp
+  ${imgui_SOURCE_DIR}/imgui_demo.cpp
+  ${imgui_SOURCE_DIR}/backends/imgui_impl_sdl3.cpp
+  ${imgui_SOURCE_DIR}/backends/imgui_impl_sdlrenderer3.cpp
 
   # ImPlot (compiled into the engine library)
-  ${IMPLOT_SOURCE_DIR}/implot.cpp
-  ${IMPLOT_SOURCE_DIR}/implot_items.cpp
+  ${implot_SOURCE_DIR}/implot.cpp
+  ${implot_SOURCE_DIR}/implot_items.cpp
 )
 
 # Suppress warnings on third-party sources we don't control
@@ -102,6 +96,9 @@ target_link_libraries(minigin
   PUBLIC
     SDL3::SDL3
     SDL3_ttf::SDL3_ttf
+    SDL3_mixer::SDL3_mixer
     glm::glm
+    tinyxml2
     ${VLD_LIBRARIES}
 )
+

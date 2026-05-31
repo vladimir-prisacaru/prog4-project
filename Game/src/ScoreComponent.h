@@ -8,8 +8,10 @@ namespace dae
     {
         public:
 
-        explicit ScoreComponent(GameObject* owner);
+        explicit ScoreComponent(GameObject* owner) : Component(owner) { };
         ~ScoreComponent() override = default;
+
+        void OnInit(EngineCtx& ctx) override;
 
         void AddPoints(int points);
 
@@ -22,5 +24,7 @@ namespace dae
         int m_PlayerIndex { 0 };
 
         static constexpr int k_AchievementThreshold { 500 };
+
+        EventManager* m_EventManager { };
     };
 }

@@ -5,7 +5,7 @@
 
 namespace dae
 {
-    SteamAchievementObserver::SteamAchievementObserver(GameObject* owner) : Component(owner)
+    void SteamAchievementObserver::OnInit(EngineCtx& ctx)
     {
         #if USE_STEAMWORKS
 
@@ -23,18 +23,18 @@ namespace dae
 
         if (achievementExists && !achievedAlready)
         {
-            EventManager::GetInstance().AddListener(
+            ctx.eventManager->AddListener(
                 GameEvent::ScoreThresholdReached, this);
         }
 
         #endif
     }
 
-    SteamAchievementObserver::~SteamAchievementObserver()
+    void SteamAchievementObserver::OnDestroy(EngineCtx & ctx)
     {
         #if USE_STEAMWORKS
 
-        EventManager::GetInstance().RemoveListener(GameEvent::ScoreThresholdReached, this);
+        ctx.eventManager->RemoveListener(GameEvent::ScoreThresholdReached, this);
 
         #endif
     }

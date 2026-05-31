@@ -1,10 +1,10 @@
 #pragma once
 
-#include "GameObject.h"
-
 #include <memory>
 #include <string>
 #include <vector>
+
+#include "GameObject.h"
 
 namespace dae
 {
@@ -12,17 +12,12 @@ namespace dae
     {
         public:
 
-        void Add(std::unique_ptr<GameObject> object);
-        void Remove(const GameObject& object);
-        void RemoveAll();
+        /* Instantiates a new GameObject */
+        GameObject* Instantiate();
+        /* Destroys the provided GameObject */
+        void Destroy(GameObject* object);
 
-        void Update(float deltaTime);
-        void FixedUpdate(float deltaTime);
-        void Render() const;
-
-        void CleanupDestroyedObjects();
-
-        ~Scene() = default;
+        ~Scene();
         Scene(const Scene& other) = delete;
         Scene(Scene&& other) = delete;
         Scene& operator=(const Scene& other) = delete;
@@ -32,8 +27,21 @@ namespace dae
 
         friend class SceneManager;
 
+        static void Parse(Scene* scene, tinyxml2::XMLElement* sceneElement);
+
         explicit Scene() = default;
 
+        void Update(float deltaTime);
+        void FixedUpdate(float deltaTime);
+
+        void OnUnload();
+
+        void CleanupDestroyedObjects();
+
+        bool m_MarkedForUnloading { };
+
         std::vector<std::unique_ptr<GameObject>> m_Objects { };
+
+        EngineCtx m_Ctx { };
     };
 }

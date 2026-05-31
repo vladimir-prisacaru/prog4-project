@@ -17,8 +17,11 @@ namespace dae
     {
         public:
 
-        explicit SteamAchievementObserver(GameObject* owner);
-        virtual ~SteamAchievementObserver();
+        explicit SteamAchievementObserver(GameObject* owner) : Component(owner) { };
+        virtual ~SteamAchievementObserver() = default;
+
+        void OnInit(EngineCtx& ctx);
+        void OnDestroy(EngineCtx& ctx);
 
         void Notify(const Event& event) override;
 

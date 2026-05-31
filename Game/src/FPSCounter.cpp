@@ -2,7 +2,14 @@
 
 #include "FPSCounter.h"
 
-void dae::FPSCounter::Update(float deltaTime)
+void dae::FPSCounter::Register()
+{
+    RegisterComponent<FPSCounter>("fps_counter");
+
+    RegisterParameter("print_interval", &FPSCounter::m_PrintInterval);
+}
+
+void dae::FPSCounter::Update(EngineCtx& ctx)
 {
     if (m_TextComponent == nullptr)
     {
@@ -14,7 +21,7 @@ void dae::FPSCounter::Update(float deltaTime)
         m_TextComponent = text;
     }
 
-    m_AccTime += deltaTime;
+    m_AccTime += ctx.deltaTime;
     m_NumFrames++;
 
     if (m_AccTime >= m_PrintInterval)

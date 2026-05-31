@@ -1,33 +1,47 @@
 #pragma once
+
 #include <vector>
 #include <string>
 #include <memory>
+#include <string_view>
+#include <filesystem>
+
 #include "Scene.h"
-#include "Singleton.h"
+namespace fs = std::filesystem;
 
 namespace dae
 {
-    class Scene;
+    class Minigin;
 
-    class SceneManager final : public Singleton<SceneManager>
+    class SceneManager final
     {
         public:
 
-        Scene& CreateScene();
+        explicit SceneManager(const fs::path& scenesPath);
 
-        void Update(float deltaTime);
-        void FixedUpdate(float deltaTime);
-        void Render();
+        ~SceneManager();
+        SceneManager(const SceneManager& other) = delete;
+        SceneManager(SceneManager&& other) = delete;
+        SceneManager& operator=(const SceneManager& other) = delete;
+        SceneManager& operator=(SceneManager&& other) = delete;
 
-        /* Called only when application is being closed */
-        void Cleanup();
+        Scene* CreateScene();
+        Scene* LoadScene(const fs::path& file);
+        void UnloadScene(Scene* scene);
 
         private:
 
-        friend class Singleton<SceneManager>;
+        friend class Minigin;
 
-        SceneManager() = default;
+        void Update(float deltaTime);
+        void FixedUpdate(float deltaTime);
 
-        std::vector<std::unique_ptr<Scene>> m_scenes { };
+        void CleanupUnloadedScenes();
+
+        fs::path m_ScenesPath { };
+
+        std::vector<std::unique_ptr<Scene>> m_Scenes { };
+
+        EngineCtx m_Ctx { };
     };
 }

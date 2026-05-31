@@ -14,7 +14,7 @@ namespace dae
 
 
 
-        void Update(float deltaTime) override;
+        void Update(EngineCtx& ctx) override;
 
         void SetAngularSpeed(float speed);
         void SetRotationRadius(float radius);

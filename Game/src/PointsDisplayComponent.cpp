@@ -7,17 +7,14 @@
 
 namespace dae
 {
-    PointsDisplayComponent::PointsDisplayComponent(GameObject* owner)
-        : Component(owner)
+    void PointsDisplayComponent::OnInit(EngineCtx& ctx)
     {
-        EventManager::GetInstance().AddListener(GameEvent::PointsGained, this);
-
-        UpdateText();
+        ctx.eventManager->AddListener(GameEvent::PointsGained, this);
     }
 
-    PointsDisplayComponent::~PointsDisplayComponent()
+    void PointsDisplayComponent::OnDestroy(EngineCtx& ctx)
     {
-        EventManager::GetInstance().RemoveListener(GameEvent::PointsGained, this);
+        ctx.eventManager->RemoveListener(GameEvent::PointsGained, this);
     }
 
     void PointsDisplayComponent::Notify(const Event& event)

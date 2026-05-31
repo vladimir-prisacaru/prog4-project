@@ -5,6 +5,8 @@
 #include <filesystem>
 #include <chrono>
 
+#include "EngineCtx.h"
+
 namespace dae
 {
     class Minigin final
@@ -23,10 +25,19 @@ namespace dae
         Minigin& operator=(const Minigin& other) = delete;
         Minigin& operator=(Minigin&& other) = delete;
 
-        void Run(const std::function<void()>& load);
+        void Run(const std::function<void(EngineCtx& ctx)>& load);
         void RunOneFrame();
 
         private:
+
+        std::unique_ptr<SceneManager> m_SceneManager { };
+        std::unique_ptr<InputManager> m_InputManager { };
+        std::unique_ptr<EventManager> m_EventManager { };
+        std::unique_ptr<ResourceManager> m_ResourceManager { };
+        std::unique_ptr<Renderer> m_Renderer { };
+        std::unique_ptr<ServiceLocator> m_Services { };
+
+        EngineCtx m_Context { };
 
         bool m_Quit { };
 

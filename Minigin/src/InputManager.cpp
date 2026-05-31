@@ -8,6 +8,9 @@
 
 namespace dae
 {
+    InputManager::InputManager() = default;
+    InputManager::~InputManager() = default;
+
     bool InputManager::ProcessInput()
     {
         int numKeys { };

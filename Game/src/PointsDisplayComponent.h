@@ -9,8 +9,11 @@ namespace dae
     {
         public:
 
-        explicit PointsDisplayComponent(GameObject* owner);
-        ~PointsDisplayComponent() override;
+        explicit PointsDisplayComponent(GameObject* owner) : Component(owner) { };
+        ~PointsDisplayComponent() override = default;
+
+        void OnInit(EngineCtx& ctx);
+        void OnDestroy(EngineCtx& ctx);
 
         void Notify(const Event& event) override;
 

@@ -10,11 +10,17 @@
 
 namespace dae
 {
-    class EventManager final : public Singleton<EventManager>
+    class EventManager final
     {
         public:
 
-        ~EventManager() override = default;
+        explicit EventManager();
+
+        ~EventManager();
+        EventManager(const EventManager& other) = delete;
+        EventManager(EventManager&& other) = delete;
+        EventManager& operator=(const EventManager& other) = delete;
+        EventManager& operator=(EventManager&& other) = delete;
 
         // Subscribe to a specific event type.
         void AddListener(GameEvent eventType, IObserver* observer);

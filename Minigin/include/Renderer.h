@@ -1,7 +1,10 @@
 #pragma once
 #include <SDL3/SDL.h>
-#include "Singleton.h"
 
+#include <vector>
+
+#include "Singleton.h"
+#include "IRenderable.h"
 
 
 namespace dae
@@ -9,15 +12,26 @@ namespace dae
     class Texture2D;
 
     /* Simple RAII wrapper for the SDL renderer */
-    class Renderer final : public Singleton<Renderer>
+    class Renderer final
     {
         public:
 
-        void Init(SDL_Window* window);
-        void Render() const;
+        explicit Renderer(SDL_Window* window);
+
+        ~Renderer();
+        Renderer(const Renderer& other) = delete;
+        Renderer(Renderer&& other) = delete;
+        Renderer& operator=(const Renderer& other) = delete;
+        Renderer& operator=(Renderer&& other) = delete;
+
+        void AddRenderable(IRenderable* renderable);
+        void RemoveRenderable(IRenderable* renderable);
+
+        /* Draws all registered IRenderable objects on the screen */
+        void Render();
+
         /* Call before Render() to create a new frame for ImGui */
         void ImGuiNewFrame();
-        void Destroy();
 
         void RenderTexture(const Texture2D& texture, float x, float y) const;
         void RenderTexture(const Texture2D& texture, float x, float y, float width, float height) const;
@@ -34,5 +48,7 @@ namespace dae
         SDL_Color m_ClearColor { };
 
         mutable bool m_CreatedNewFrameImGui { };
+
+        std::vector<IRenderable*> m_Renderables { };
     };
 }

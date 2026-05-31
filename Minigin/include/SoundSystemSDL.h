@@ -14,6 +14,7 @@ namespace dae
         SoundSystemSDL(const fs::path& clipsPath);
         virtual ~SoundSystemSDL();
 
+        void SetDataPath(const fs::path& dataPath) override;
         void Play(std::string_view id, float volume = 1.0f) override;
 
         private:

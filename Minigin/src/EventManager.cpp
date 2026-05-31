@@ -4,6 +4,9 @@
 
 namespace dae
 {
+    EventManager::EventManager() = default;
+    EventManager::~EventManager() = default;
+
     void EventManager::AddListener(GameEvent eventType, IObserver* observer)
     {
         if (!observer) return;
@@ -21,7 +24,7 @@ namespace dae
         if (it == m_Listeners.end()) return;
 
         auto& list = it->second;
-        auto  pos = std::find(list.begin(), list.end(), observer);
+        auto pos = std::find(list.begin(), list.end(), observer);
         if (pos != list.end())
             list.erase(pos);
     }

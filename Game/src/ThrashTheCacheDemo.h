@@ -11,7 +11,7 @@ namespace dae
         ThrashTheCacheDemo(GameObject* owner) : Component(owner) { }
         virtual ~ThrashTheCacheDemo() = default;
 
-        void Update(float) override;
+        void Update(EngineCtx& ctx) override;
 
         private:
 

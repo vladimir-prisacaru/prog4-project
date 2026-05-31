@@ -8,14 +8,17 @@
 
 namespace dae
 {
-    class TextComponent : public Component
+    class TextComponent : public Component, public Registrar<TextComponent>
     {
         public:
 
-        TextComponent(GameObject* owner) : Component(owner) { }
+        static void Register();
+
+        TextComponent(GameObject* owner) : Component(owner) { };
         virtual ~TextComponent() = default;
 
-        void Update(float) override;
+        void OnInit(EngineCtx& ctx) override;
+        void Update(EngineCtx& ctx) override;
 
         void SetText(const std::string& text);
         void SetColor(const SDL_Color& color);
@@ -25,11 +28,16 @@ namespace dae
 
         private:
 
+        std::string m_FontPath { };
+        int m_FontSize { };
+        std::string m_TextStr { "none" };
+        SDL_Color m_TextColor { 255, 255, 255, 255 };
+
         bool m_NeedsUpdate { };
-        std::string m_Text { };
-        SDL_Color m_Color { 255, 255, 255, 255 };
 
         std::shared_ptr<Font> m_Font { };
         TextureComponent* m_TextureComponent { };
+
+        ResourceManager* m_ResourceManager { };
     };
 }

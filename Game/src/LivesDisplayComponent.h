@@ -9,8 +9,11 @@ namespace dae
     {
         public:
 
-        explicit LivesDisplayComponent(GameObject* owner);
-        ~LivesDisplayComponent() override;
+        explicit LivesDisplayComponent(GameObject* owner) : Component(owner) { };
+        ~LivesDisplayComponent() override = default;
+
+        void OnInit(EngineCtx& ctx) override;
+        void OnDestroy(EngineCtx& ctx) override;
 
         void Notify(const Event& event) override;
 

@@ -10,10 +10,10 @@ namespace dae
     {
         public:
 
-        explicit SoundTestComponent(GameObject* owner);
+        explicit SoundTestComponent(GameObject* owner) : Component(owner) { };
         virtual ~SoundTestComponent() override = default;
 
-        void Update(float) override;
+        void Update(EngineCtx& ctx) override;
 
         private:
 

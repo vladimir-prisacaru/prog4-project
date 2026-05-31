@@ -1,10 +1,10 @@
 #include "RotatorComponent.h"
 
-void dae::RotatorComponent::Update(float deltaTime)
+void dae::RotatorComponent::Update(EngineCtx& ctx)
 {
     Transform& transform = GetOwner()->GetTransform();
 
-    m_Angle += m_AngularSpeed * deltaTime;
+    m_Angle += m_AngularSpeed * ctx.deltaTime;
 
     glm::vec3 unitVector { std::cosf(m_Angle), std::sinf(m_Angle), 0.0f };
 

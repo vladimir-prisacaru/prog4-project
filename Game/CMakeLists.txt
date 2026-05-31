@@ -14,6 +14,7 @@ set(SOURCES
     src/LivesDisplayComponent.cpp
     src/PointsDisplayComponent.cpp
     src/SteamAchievementObserver.cpp
+    src/FPSCounter.cpp
 )
 
 

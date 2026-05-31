@@ -4,15 +4,15 @@
 #include <implot.h>
 
 #include <stdexcept>
-#include <cstring>
 #include <iostream>
+#include <algorithm>
 
 #include "Renderer.h"
 #include "SceneManager.h"
 #include "Texture2D.h"
 
 
-void dae::Renderer::Init(SDL_Window* window)
+dae::Renderer::Renderer(SDL_Window* window)
 {
     m_Window = window;
 
@@ -55,15 +55,64 @@ void dae::Renderer::Init(SDL_Window* window)
     ImPlot::CreateContext();
 }
 
-void dae::Renderer::Render() const
+dae::Renderer::~Renderer()
+{
+    // Clean up ImPlot
+    ImPlot::DestroyContext();
+
+    // Clean up ImGui
+    ImGui_ImplSDLRenderer3_Shutdown();
+    ImGui_ImplSDL3_Shutdown();
+    ImGui::DestroyContext();
+
+    if (m_Renderer != nullptr)
+    {
+        SDL_DestroyRenderer(m_Renderer);
+        m_Renderer = nullptr;
+    }
+};
+
+void dae::Renderer::AddRenderable(IRenderable* renderable)
+{
+    m_Renderables.push_back(renderable);
+}
+
+void dae::Renderer::RemoveRenderable(IRenderable* renderable)
+{
+    auto it { std::find(m_Renderables.begin(), m_Renderables.end(), renderable) };
+
+    if (it == m_Renderables.end())
+    {
+        assert(false && "Tried to remove an invalid IRenderable");
+
+        return;
+    }
+
+    m_Renderables.erase(it);
+}
+
+void dae::Renderer::Render()
 {
     // SDL clear
     const auto& color = GetBackgroundColor();
     SDL_SetRenderDrawColor(m_Renderer, color.r, color.g, color.b, color.a);
     SDL_RenderClear(m_Renderer);
 
+    // Sort by draw order:
+    std::sort(
+        m_Renderables.begin(),
+        m_Renderables.end(),
+        [](IRenderable* lhs, IRenderable* rhs) -> bool
+        {
+           return lhs->GetDrawOrder() < rhs->GetDrawOrder();
+        }
+    );
+
     // Drawing
-    SceneManager::GetInstance().Render();
+    for (auto& renderable : m_Renderables)
+    {
+        renderable->Render(this);
+    }
 
     // ImGui render
     if (m_CreatedNewFrameImGui)
@@ -85,23 +134,6 @@ void dae::Renderer::ImGuiNewFrame()
     ImGui::NewFrame();
 
     m_CreatedNewFrameImGui = true;
-}
-
-void dae::Renderer::Destroy()
-{
-    // Clean up ImPlot
-    ImPlot::DestroyContext();
-
-    // Clean up ImGui
-    ImGui_ImplSDLRenderer3_Shutdown();
-    ImGui_ImplSDL3_Shutdown();
-    ImGui::DestroyContext();
-
-    if (m_Renderer != nullptr)
-    {
-        SDL_DestroyRenderer(m_Renderer);
-        m_Renderer = nullptr;
-    }
 }
 
 void dae::Renderer::RenderTexture(const Texture2D& texture, const float x, const float y) const

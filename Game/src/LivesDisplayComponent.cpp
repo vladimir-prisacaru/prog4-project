@@ -7,17 +7,16 @@
 
 namespace dae
 {
-    LivesDisplayComponent::LivesDisplayComponent(GameObject* owner)
-        : Component(owner)
+    void LivesDisplayComponent::OnInit(EngineCtx& ctx)
     {
-        EventManager::GetInstance().AddListener(GameEvent::PlayerDied, this);
+        ctx.eventManager->AddListener(GameEvent::PlayerDied, this);
 
         UpdateText();
     }
 
-    LivesDisplayComponent::~LivesDisplayComponent()
+    void LivesDisplayComponent::OnDestroy(EngineCtx& ctx)
     {
-        EventManager::GetInstance().RemoveListener(GameEvent::PlayerDied, this);
+        ctx.eventManager->RemoveListener(GameEvent::PlayerDied, this);
     }
 
     void LivesDisplayComponent::Notify(const Event& event)

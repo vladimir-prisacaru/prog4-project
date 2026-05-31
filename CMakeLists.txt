@@ -141,6 +141,8 @@ FetchContent_MakeAvailable(implot)
 set(IMPLOT_SOURCE_DIR ${implot_SOURCE_DIR} CACHE INTERNAL "ImPlot source directory")
 
 # tinyxml2
+set(tinyxml2_SHARED_LIBS OFF CACHE BOOL "" FORCE)
+
 FetchContent_Declare(
     tinyxml2
     GIT_REPOSITORY https://github.com/leethomason/tinyxml2.git

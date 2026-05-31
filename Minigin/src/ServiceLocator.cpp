@@ -5,6 +5,9 @@
 
 namespace dae
 {
+    ServiceLocator::ServiceLocator(const fs::path& dataPath) : m_DataPath(dataPath) { };
+    ServiceLocator::~ServiceLocator() = default;
+
     SoundSystem& ServiceLocator::GetSoundSystem()
     {
         assert(m_SoundSystem != nullptr &&
@@ -15,13 +18,8 @@ namespace dae
 
     void ServiceLocator::RegisterSoundSystem(std::unique_ptr<SoundSystem>&& soundSystem)
     {
+        soundSystem->SetDataPath(m_DataPath);
+
         m_SoundSystem = std::move(soundSystem);
     }
-
-    void ServiceLocator::Cleanup()
-    {
-        m_SoundSystem.reset();
-    }
-
-    std::unique_ptr<SoundSystem> ServiceLocator::m_SoundSystem = nullptr;
 }

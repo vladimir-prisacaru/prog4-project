@@ -11,11 +11,17 @@ namespace dae
 {
     class InputCommand;
 
-    class InputManager final : public Singleton<InputManager>
+    class InputManager final
     {
         public:
 
-        virtual ~InputManager() = default;
+        explicit InputManager();
+
+        ~InputManager();
+        InputManager(const InputManager& other) = delete;
+        InputManager(InputManager&& other) = delete;
+        InputManager& operator=(const InputManager& other) = delete;
+        InputManager& operator=(InputManager&& other) = delete;
 
         // Main loop, returns false when the app should quit
         bool ProcessInput();
@@ -44,6 +50,6 @@ namespace dae
         std::map<KeyboardBindingKey, std::unique_ptr<InputCommand>> m_KeyboardBindings { };
 
         Gamepad& GetOrCreateGamePad(unsigned int index);
-        void     ProcessKeyboardCommands();
+        void ProcessKeyboardCommands();
     };
 }

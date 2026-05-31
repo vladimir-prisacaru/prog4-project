@@ -11,7 +11,7 @@ namespace dae
         explicit HealthComponent(GameObject* owner);
         ~HealthComponent() override = default;
 
-        void Initialize() override;
+        void OnInit(EngineCtx& ctx) override;
 
         void TakeDamage();
 
@@ -26,5 +26,7 @@ namespace dae
         int m_MaxLives { 3 };
         int m_Lives { 3 };
         int m_PlayerIndex { 0 };
+
+        EventManager* m_EventManager { };
     };
 }

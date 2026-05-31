@@ -30,6 +30,10 @@
 
 
 
+// ---------------
+// --- Helpers ---
+// ---------------
+
 SDL_Window* g_Window { };
 
 static void LogSDLVersion(const std::string& message, int major, int minor, int patch)
@@ -81,6 +85,12 @@ static void PrintSDLVersion()
         SDL_VERSIONNUM_MINOR(version), SDL_VERSIONNUM_MICRO(version));
 }
 
+
+
+// ---------------
+// --- Minigin ---
+// ---------------
+
 dae::Minigin::Minigin(const std::filesystem::path& dataPath)
 {
     PrintSDLVersion();
@@ -103,9 +113,22 @@ dae::Minigin::Minigin(const std::filesystem::path& dataPath)
         throw std::runtime_error(std::string("SDL_CreateWindow Error: ") + SDL_GetError());
     }
 
-    Renderer::GetInstance().Init(g_Window);
+    m_SceneManager = std::make_unique<SceneManager>(dataPath / "scenes");
+    m_EventManager = std::make_unique<EventManager>();
+    m_InputManager = std::make_unique<InputManager>();
+    m_ResourceManager = std::make_unique<ResourceManager>(dataPath);
+    m_Renderer = std::make_unique<Renderer>(g_Window);
+    m_Services = std::make_unique<ServiceLocator>(dataPath);
 
-    ResourceManager::GetInstance().Init(dataPath);
+    m_Context.sceneManager = m_SceneManager.get();
+    m_Context.eventManager = m_EventManager.get();
+    m_Context.inputManager = m_InputManager.get();
+    m_Context.resourceManager = m_ResourceManager.get();
+    m_Context.renderer = m_Renderer.get();
+    m_Context.services = m_Services.get();
+
+    m_SceneManager->m_Ctx = m_Context;
+    m_ResourceManager->m_Ctx = m_Context;
 
 #if USE_STEAMWORKS
     if (!SteamAPI_Init())
@@ -118,7 +141,8 @@ dae::Minigin::Minigin(const std::filesystem::path& dataPath)
 
 dae::Minigin::~Minigin()
 {
-    Renderer::GetInstance().Destroy();
+    m_Renderer.reset();
+    m_Services.reset();
 
     #if USE_STEAMWORKS
     if (m_SteamInitialized)
@@ -132,9 +156,9 @@ dae::Minigin::~Minigin()
     SDL_Quit();
 }
 
-void dae::Minigin::Run(const std::function<void()>& load)
+void dae::Minigin::Run(const std::function<void(EngineCtx& ctx)>& load)
 {
-    load();
+    load(m_Context);
 
     #ifndef __EMSCRIPTEN__
 
@@ -168,26 +192,26 @@ void dae::Minigin::RunOneFrame()
 
 
 
-    m_Quit = !InputManager::GetInstance().ProcessInput();
+    m_Quit = !m_InputManager->ProcessInput();
 
 #if USE_STEAMWORKS
     SteamAPI_RunCallbacks();
 #endif
 
-    Renderer::GetInstance().ImGuiNewFrame();
+    m_Renderer->ImGuiNewFrame();
 
     while (m_FixedUpdateLag >= FIXED_TIMESTEP)
     {
-        SceneManager::GetInstance().FixedUpdate(FIXED_TIMESTEP);
+        m_SceneManager->FixedUpdate(FIXED_TIMESTEP);
 
         m_FixedUpdateLag -= FIXED_TIMESTEP;
     }
 
-    SceneManager::GetInstance().Update(deltaTime);
+    m_SceneManager->Update(deltaTime);
 
-    EventManager::GetInstance().FlushEvents();
+    m_EventManager->FlushEvents();
 
-    Renderer::GetInstance().Render();
+    m_Renderer->Render();
 
 
 
@@ -198,45 +222,9 @@ void dae::Minigin::RunOneFrame()
 
     const auto targetTime { frameStartTime + frameTime };
 
-
-
-    // This approach was too inaccurate (error of ~4FPS)
-    // sleep_for and sleep_until are not accurate enough for frame capping
-
-    //std::this_thread::sleep_until(targetTime);
-
-
-
     // This approach is exactly accurate, but not optimized ("busy waiting")
     while (clock::now() < targetTime)
     {
         std::this_thread::yield();
-    }
-
-
-
-    // This approach was too inaccurate (error of ~1FPS)
-    // An attempt to have a course phase with sleep_for and a fine phase with busy waiting
-
-    //using milliseconds = std::chrono::milliseconds;
-    //auto now { clock::now() };
-    //
-    //while (now < targetTime)
-    //{
-    //    auto remaining = targetTime - now;
-    //
-    //    if (remaining > milliseconds(1))
-    //        std::this_thread::sleep_for(milliseconds(1)); // coarse phase
-    //    else
-    //        std::this_thread::yield(); // fine phase
-    //
-    //    now = clock::now();
-    //}
-
-    // Cleanup on application exit
-    if (m_Quit)
-    {
-        SceneManager::GetInstance().Cleanup();
-        ServiceLocator::Cleanup();
     }
 }

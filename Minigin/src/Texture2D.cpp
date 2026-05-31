@@ -3,7 +3,7 @@
 #include "Renderer.h"
 #include <stdexcept>
 
-dae::Texture2D::Texture2D(const std::string& fullPath)
+dae::Texture2D::Texture2D(const std::string& fullPath, SDL_Renderer* renderer)
 {
     SDL_Surface* surface = SDL_LoadPNG(fullPath.c_str());
     if (!surface)
@@ -14,7 +14,7 @@ dae::Texture2D::Texture2D(const std::string& fullPath)
     }
 
     m_texture = SDL_CreateTextureFromSurface(
-        Renderer::GetInstance().GetSDLRenderer(),
+        renderer,
         surface
     );
 

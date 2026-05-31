@@ -42,6 +42,11 @@ class dae::SoundSystemSDL::Impl
         m_Thread = std::thread(&Impl::AudioThreadFunc, this);
     }
 
+    void SetDataPath(const fs::path& dataPath)
+    {
+        m_DataPath = dataPath;
+    }
+
     void Play(std::string_view id, float volume)
     {
         {
@@ -170,7 +175,7 @@ class dae::SoundSystemSDL::Impl
     fs::path FindClipFile(const std::string& name) const
     {
         std::error_code ec;
-        for (const auto& entry : fs::directory_iterator(m_ClipsPath, ec))
+        for (const auto& entry : fs::directory_iterator(m_DataPath / m_ClipsPath, ec))
         {
             if (entry.path().stem() == name)
                 return entry.path();
@@ -186,6 +191,7 @@ class dae::SoundSystemSDL::Impl
     using AudioPtr = std::unique_ptr<MIX_Audio, AudioDeleter>;
 
     fs::path m_ClipsPath;
+    fs::path m_DataPath;
     MIX_Mixer* m_Mixer = nullptr;
     std::unordered_map<std::string, AudioPtr> m_Cache; // audio thread only
     std::vector<MIX_Track*> m_ActiveTracks; // audio thread only
@@ -210,6 +216,11 @@ namespace dae
     { }
 
     SoundSystemSDL::~SoundSystemSDL() = default;
+
+    void SoundSystemSDL::SetDataPath(const fs::path& dataPath)
+    {
+        m_Impl->SetDataPath(dataPath);
+    }
 
     void SoundSystemSDL::Play(std::string_view id, float volume)
     {

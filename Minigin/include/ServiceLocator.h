@@ -1,6 +1,8 @@
 #pragma once
 
 #include <memory>
+#include <filesystem>
+namespace fs = std::filesystem;
 
 namespace dae
 {
@@ -10,14 +12,21 @@ namespace dae
     {
         public:
 
-        static SoundSystem& GetSoundSystem();
-        static void RegisterSoundSystem(std::unique_ptr<SoundSystem>&& soundSystem);
+        explicit ServiceLocator(const fs::path& dataPath);
 
-        /* Call this for cleanup that needs to happen before main exits */
-        static void Cleanup();
+        ~ServiceLocator();
+        ServiceLocator(const ServiceLocator& other) = delete;
+        ServiceLocator(ServiceLocator&& other) = delete;
+        ServiceLocator& operator=(const ServiceLocator& other) = delete;
+        ServiceLocator& operator=(ServiceLocator&& other) = delete;
+
+        SoundSystem& GetSoundSystem();
+        void RegisterSoundSystem(std::unique_ptr<SoundSystem>&& soundSystem);
 
         private:
 
-        static std::unique_ptr<SoundSystem> m_SoundSystem;
+        fs::path m_DataPath;
+
+        std::unique_ptr<SoundSystem> m_SoundSystem { };
     };
 }

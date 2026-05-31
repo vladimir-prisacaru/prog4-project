@@ -3,6 +3,8 @@
 #include <string>
 
 struct SDL_Texture;
+struct SDL_Renderer;
+
 namespace dae
 {
     /* Simple RAII wrapper for an SDL_Texture */
@@ -11,7 +13,7 @@ namespace dae
         public:
 
         explicit Texture2D(SDL_Texture* texture);
-        explicit Texture2D(const std::string& fullPath);
+        explicit Texture2D(const std::string& fullPath, SDL_Renderer* renderer);
         ~Texture2D();
 
         Texture2D(const Texture2D&) = delete;

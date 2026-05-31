@@ -59,8 +59,7 @@ namespace dae
 
             transform.SetLocalPos(
                 transform.GetLocalPos().x + m_Direction.x * m_Speed,
-                transform.GetLocalPos().y + m_Direction.y * m_Speed,
-                0.f);
+                transform.GetLocalPos().y + m_Direction.y * m_Speed);
         }
 
         private:

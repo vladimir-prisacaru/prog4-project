@@ -16,7 +16,6 @@ set(MINIGIN_SOURCES
   src/Texture2D.cpp
   src/TextComponent.cpp
   src/TextureComponent.cpp
-  src/FPSCounter.cpp
   src/Gamepad.cpp
   src/EventManager.cpp
   src/ServiceLocator.cpp
@@ -98,7 +97,6 @@ target_link_libraries(minigin
     SDL3_ttf::SDL3_ttf
     SDL3_mixer::SDL3_mixer
     glm::glm
-    tinyxml2
+    tinyxml2::tinyxml2
     ${VLD_LIBRARIES}
 )
-

@@ -5,14 +5,16 @@
 
 namespace dae
 {
-    class FPSCounter : public Component
+    class FPSCounter : public Component, public Registrar<FPSCounter>
     {
         public:
+
+        static void Register();
 
         FPSCounter(GameObject* parent) : Component(parent) { }
         virtual ~FPSCounter() = default;
 
-        void Update(float deltaTime) override;
+        void Update(EngineCtx& ctx) override;
 
         private:
 

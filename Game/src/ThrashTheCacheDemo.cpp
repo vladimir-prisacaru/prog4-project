@@ -7,7 +7,7 @@
 
 
 
-void dae::ThrashTheCacheDemo::Update(float)
+void dae::ThrashTheCacheDemo::Update(EngineCtx&)
 {
     ImGui::Begin("Thrash The Cache");
 

@@ -7,9 +7,11 @@ namespace dae
         : Component(owner)
     { }
 
-    void HealthComponent::Initialize()
+    void HealthComponent::OnInit(EngineCtx& ctx)
     {
         m_Lives = m_MaxLives;
+
+        m_EventManager = ctx.eventManager;
     }
 
     void HealthComponent::TakeDamage()
@@ -18,7 +20,7 @@ namespace dae
 
         --m_Lives;
 
-        EventManager::GetInstance().NotifyObservers(
+        m_EventManager->NotifyObservers(
             Event { GameEvent::PlayerDied, m_PlayerIndex });
     }
 }

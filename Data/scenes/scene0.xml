@@ -1,0 +1,81 @@
+<scene>
+
+	<!-- Background texture -->
+	<object>
+		<transform>
+			<position>0 0</position>
+		</transform>
+
+		<components>
+			<texture_component>
+				<texture_path>background.png</texture_path>
+				<draw_order>-1</draw_order>
+			</texture_component>
+		</components>
+	</object>
+
+	<!-- Logo texture -->
+	<object>
+		<transform>
+			<position>358 180</position>
+		</transform>
+
+		<components>
+			<texture_component>
+				<texture_path>logo.png</texture_path>
+				<draw_order>0</draw_order>
+			</texture_component>
+		</components>
+	</object>
+
+	<!-- Title text pivot (to test parent-child parsing) -->
+	<object>
+		<transform>
+			<position>0 0</position>
+		</transform>
+
+		<children>
+			<!-- Title text object -->
+			<object>
+				<transform>
+					<position>292 20</position>
+				</transform>
+				<components>
+					<text_component>
+						<font_path>Lingua.otf</font_path>
+						<font_size>36</font_size>
+						<text_str>Programming 4 Assignment</text_str>
+						<text_color>1.0 1.0 0.0 1.0</text_color>
+					</text_component>
+					<texture_component>
+						<texture_path>default.png</texture_path>
+						<draw_order>1</draw_order>
+					</texture_component>
+				</components>
+			</object>
+		</children>
+	</object>
+
+	<!-- FPS counter object -->
+	<object>
+		<transform>
+			<position>20 20</position>
+		</transform>
+		<components>
+			<text_component>
+				<font_path>Lingua.otf</font_path>
+				<font_size>36</font_size>
+				<text_str>FPS: 0</text_str>
+				<text_color>1.0 1.0 1.0 1.0</text_color>
+			</text_component>
+			<texture_component>
+				<texture_path>default.png</texture_path>
+				<draw_order>1</draw_order>
+			</texture_component>
+			<fps_counter>
+				<print_interval>1.0</print_interval>
+			</fps_counter>
+		</components>
+	</object>
+
+</scene>

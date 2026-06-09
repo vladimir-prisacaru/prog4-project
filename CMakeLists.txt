@@ -153,6 +153,10 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(tinyxml2)
 
+# nlohmann json
+FetchContent_Declare(json URL https://github.com/nlohmann/json/releases/download/v3.12.0/json.tar.xz)
+FetchContent_MakeAvailable(json)
+
 # VLD (Windows only)
 if(WIN32)
   find_package(VLD CONFIG)

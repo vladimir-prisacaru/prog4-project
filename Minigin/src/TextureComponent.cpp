@@ -8,6 +8,7 @@ void dae::TextureComponent::Register()
 
     RegisterParameter("texture_path", &TextureComponent::m_TexturePath);
     RegisterParameter("draw_order", &TextureComponent::m_DrawOrder);
+    RegisterParameter("scale", &TextureComponent::m_Scale);
 }
 
 void dae::TextureComponent::SetTexture(std::shared_ptr<Texture2D> texture)
@@ -48,5 +49,5 @@ void dae::TextureComponent::Render(const Renderer* renderer) const
         return;
 
     const auto& pos { GetOwner()->GetTransform().GetWorldPos() };
-    renderer->RenderTexture(*m_Texture, pos.x, pos.y);
+    renderer->RenderTexture(*m_Texture, pos.x, pos.y, m_Scale);
 }

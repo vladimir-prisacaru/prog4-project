@@ -70,11 +70,14 @@ namespace dae
                 stack.push({ childObj, childElem });
             }
         }
+    }
 
-        for (auto& obj : scene->m_Objects)
+    void Scene::Init()
+    {
+        for (auto& obj : m_Objects)
         {
-            scene->m_Ctx.deltaTime = 0.0f;
-            obj->OnInit(scene->m_Ctx);
+            m_Ctx.deltaTime = 0.0f;
+            obj->OnInit(m_Ctx);
         }
     }
 

@@ -33,7 +33,7 @@ set(MINIGIN_SOURCES
   # ImPlot (compiled into the engine library)
   ${implot_SOURCE_DIR}/implot.cpp
   ${implot_SOURCE_DIR}/implot_items.cpp
-)
+ "src/SpriteComponent.cpp" "src/GridRenderer.cpp" "src/Physics.cpp" "src/BoxCollider.cpp" "src/GridComponent.cpp")
 
 # Suppress warnings on third-party sources we don't control
 set(THIRD_PARTY_SOURCES
@@ -98,5 +98,6 @@ target_link_libraries(minigin
     SDL3_mixer::SDL3_mixer
     glm::glm
     tinyxml2::tinyxml2
+    nlohmann_json::nlohmann_json
     ${VLD_LIBRARIES}
 )

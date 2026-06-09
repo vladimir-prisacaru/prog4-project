@@ -36,6 +36,7 @@ namespace dae
         std::unique_ptr<ResourceManager> m_ResourceManager { };
         std::unique_ptr<Renderer> m_Renderer { };
         std::unique_ptr<ServiceLocator> m_Services { };
+        std::unique_ptr<Physics> m_Physics { };
 
         EngineCtx m_Context { };
 

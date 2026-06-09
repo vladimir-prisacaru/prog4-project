@@ -136,7 +136,12 @@ void dae::Renderer::ImGuiNewFrame()
     m_CreatedNewFrameImGui = true;
 }
 
-void dae::Renderer::RenderTexture(const Texture2D& texture, const float x, const float y) const
+void dae::Renderer::RenderTexture(const Texture2D& texture, const SDL_FRect& srcRect, const SDL_FRect& dstRect) const
+{
+    SDL_RenderTexture(GetSDLRenderer(), texture.GetSDLTexture(), &srcRect, &dstRect);
+}
+
+void dae::Renderer::RenderTexture(const Texture2D& texture, float x, float y) const
 {
     SDL_FRect dst { };
     dst.x = x;
@@ -145,7 +150,18 @@ void dae::Renderer::RenderTexture(const Texture2D& texture, const float x, const
     SDL_RenderTexture(GetSDLRenderer(), texture.GetSDLTexture(), nullptr, &dst);
 }
 
-void dae::Renderer::RenderTexture(const Texture2D& texture, const float x, const float y, const float width, const float height) const
+void dae::Renderer::RenderTexture(const Texture2D& texture, float x, float y, float scale) const
+{
+    SDL_FRect dst { };
+    dst.x = x;
+    dst.y = y;
+    SDL_GetTextureSize(texture.GetSDLTexture(), &dst.w, &dst.h);
+    dst.w *= scale;
+    dst.h *= scale;
+    SDL_RenderTexture(GetSDLRenderer(), texture.GetSDLTexture(), nullptr, &dst);
+}
+
+void dae::Renderer::RenderTexture(const Texture2D& texture, float x, float y, float width, float height) const
 {
     SDL_FRect dst { };
     dst.x = x;

@@ -17,6 +17,62 @@ namespace dae
         /* Destroys the provided GameObject */
         void Destroy(GameObject* object);
 
+        /* Returns all objects that have a component of the given type */
+        template <ComponentType T>
+        std::vector<GameObject*> GetAllObjectsByType()
+        {
+            std::vector<GameObject*> result { };
+
+            for (auto& obj : m_Objects)
+            {
+                if (obj->HasComponent<T>())
+                    result.push_back(obj);
+            }
+
+            return result;
+        }
+
+        /* Returns the first object that has a component of the given type */
+        template <ComponentType T>
+        GameObject* GetFirstObjectByType()
+        {
+            for (auto& obj : m_Objects)
+            {
+                if (obj->HasComponent<T>())
+                    return obj.get();
+            }
+
+            return nullptr;
+        }
+
+        /* Returns all components of the given type */
+        template <ComponentType T>
+        std::vector<T*> GetAllComponentsByType()
+        {
+            std::vector<T*> result { };
+
+            for (auto& obj : m_Objects)
+            {
+                if (T* comp { obj->GetComponent<T>() })
+                    result.push_back(comp);
+            }
+
+            return result;
+        }
+
+        /* Returns the first component of the given type */
+        template <ComponentType T>
+        T* GetFirstComponentByType()
+        {
+            for (auto& obj : m_Objects)
+            {
+                if (T* comp { obj->GetComponent<T>() })
+                    return comp;
+            }
+
+            return nullptr;
+        }
+
         ~Scene();
         Scene(const Scene& other) = delete;
         Scene(Scene&& other) = delete;
@@ -31,6 +87,7 @@ namespace dae
 
         explicit Scene() = default;
 
+        void Init();
         void Update(float deltaTime);
         void FixedUpdate(float deltaTime);
 

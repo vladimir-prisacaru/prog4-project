@@ -5,6 +5,7 @@
 #include "ResourceManager.h"
 #include "EventManager.h"
 #include "ServiceLocator.h"
+#include "Physics.h"
 
 #include <stdexcept>
 #include <sstream>
@@ -119,6 +120,7 @@ dae::Minigin::Minigin(const std::filesystem::path& dataPath)
     m_ResourceManager = std::make_unique<ResourceManager>(dataPath);
     m_Renderer = std::make_unique<Renderer>(g_Window);
     m_Services = std::make_unique<ServiceLocator>(dataPath);
+    m_Physics = std::make_unique<Physics>();
 
     m_Context.sceneManager = m_SceneManager.get();
     m_Context.eventManager = m_EventManager.get();
@@ -126,6 +128,8 @@ dae::Minigin::Minigin(const std::filesystem::path& dataPath)
     m_Context.resourceManager = m_ResourceManager.get();
     m_Context.renderer = m_Renderer.get();
     m_Context.services = m_Services.get();
+    m_Context.physics = m_Physics.get();
+    m_Context.dataPath = dataPath;
 
     m_SceneManager->m_Ctx = m_Context;
     m_ResourceManager->m_Ctx = m_Context;
@@ -202,6 +206,8 @@ void dae::Minigin::RunOneFrame()
 
     while (m_FixedUpdateLag >= FIXED_TIMESTEP)
     {
+        m_Physics->Update();
+
         m_SceneManager->FixedUpdate(FIXED_TIMESTEP);
 
         m_FixedUpdateLag -= FIXED_TIMESTEP;

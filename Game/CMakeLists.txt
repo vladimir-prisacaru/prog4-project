@@ -6,15 +6,9 @@ project(Game)
 # =====================================================================
 set(SOURCES
     src/Main.cpp
-    src/SoundTestComponent.cpp
-    src/RotatorComponent.cpp
-    src/ThrashTheCacheDemo.cpp
-    src/HealthComponent.cpp
-    src/ScoreComponent.cpp
-    src/LivesDisplayComponent.cpp
-    src/PointsDisplayComponent.cpp
-    src/SteamAchievementObserver.cpp
     src/FPSCounter.cpp
+    src/Player.cpp
+    src/TunnelComponent.cpp
 )
 
 

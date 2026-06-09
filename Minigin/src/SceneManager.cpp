@@ -16,33 +16,18 @@ namespace dae
         return m_Scenes.back().get();
     }
 
-    Scene* SceneManager::LoadScene(const fs::path& file)
+    void SceneManager::LoadScene(const fs::path& file)
     {
-        tinyxml2::XMLDocument doc;
-
         fs::path fullPath { m_ScenesPath / file };
 
-        if (doc.LoadFile(fullPath.string().c_str()) != tinyxml2::XML_SUCCESS)
+        if (!fs::exists(fullPath))
         {
-            //assert(false && "Failed to load scene file, recheck filepath or xml syntax");
+            logError("Scene file at path '{}' does not exist!", fullPath.string());
 
-            return nullptr;
+            return;
         }
 
-        tinyxml2::XMLElement* sceneElement { doc.FirstChildElement("scene") };
-
-        if (!sceneElement)
-        {
-            assert(false && "Missing <scene> root element");
-
-            return nullptr;
-        }
-
-        Scene* scene { CreateScene() };
-
-        Scene::Parse(scene, sceneElement);
-
-        return scene;
+        m_ScheduledToLoad.push(fullPath);
     }
 
     void SceneManager::UnloadScene(Scene* scene)
@@ -68,6 +53,8 @@ namespace dae
 
     void SceneManager::Update(float deltaTime)
     {
+        LoadAllScheduledScenes();
+
         CleanupUnloadedScenes();
 
         for (auto& scene : m_Scenes)
@@ -82,6 +69,53 @@ namespace dae
         {
             scene->FixedUpdate(deltaTime);
         }
+    }
+
+    void SceneManager::LoadAllScheduledScenes()
+    {
+        std::vector<Scene*> scenesToInit { };
+        scenesToInit.reserve(m_ScheduledToLoad.size());
+
+        while (!m_ScheduledToLoad.empty())
+        {
+            fs::path path { std::move(m_ScheduledToLoad.front()) };
+            m_ScheduledToLoad.pop();
+
+            if (Scene* scene { LoadScheduledScene(path) })
+                scenesToInit.push_back(scene);
+        }
+
+        for (auto& scene : scenesToInit)
+        {
+            scene->Init();
+        }
+    }
+
+    Scene* SceneManager::LoadScheduledScene(const fs::path& path)
+    {
+        tinyxml2::XMLDocument doc;
+
+        if (doc.LoadFile(path.string().c_str()) != tinyxml2::XML_SUCCESS)
+        {
+            logError(".xml parse error in file '{}': {}", path.string(), doc.ErrorStr());
+
+            return nullptr;
+        }
+
+        tinyxml2::XMLElement* sceneElement { doc.FirstChildElement("scene") };
+
+        if (!sceneElement)
+        {
+            logError("Missing <scene> root element in scene file '{}'", path.string());
+
+            return nullptr;
+        }
+
+        Scene* scene { CreateScene() };
+
+        Scene::Parse(scene, sceneElement);
+
+        return scene;
     }
 
     void SceneManager::CleanupUnloadedScenes()

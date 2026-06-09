@@ -6,14 +6,13 @@
 #include "FPSCounter.h"
 #include "InputManager.h"
 #include "Scene.h"
-#include "HealthComponent.h"
-#include "ScoreComponent.h"
-#include "LivesDisplayComponent.h"
-#include "PointsDisplayComponent.h"
-#include "GameCommands.h"
 #include "ServiceLocator.h"
 #include "SoundSystemSDL.h"
-#include "SoundTestComponent.h"
+#include "SpriteComponent.h"
+#include "Player.h"
+#include "TunnelComponent.h"
+#include "GridComponent.h"
+#include "GridRenderer.h"
 
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>

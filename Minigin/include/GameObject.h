@@ -10,7 +10,10 @@
 #include <memory>
 #include <sstream>
 #include <functional>
+#include <type_traits>
 #include <list>
+
+#include "Array2d.h"
 
 #include "EngineCtx.h"
 #include "DebugUtils.h"
@@ -21,6 +24,8 @@ namespace dae
     class Transform;
     class GameObject;
     class Scene;
+
+
 
     // Static registrar, calls Derived::Register() during static initialization
     template <typename Derived>
@@ -37,6 +42,8 @@ namespace dae
         } reg { };
     };
 
+
+
     // Any derived component must conform to this concept
     template<typename T>
     concept ComponentType =
@@ -47,6 +54,54 @@ namespace dae
         { std::make_unique<T>(owner) } -> std::same_as<std::unique_ptr<T>>;
         { T::Register() } -> std::same_as<void>;
     };
+
+
+
+    // Traits to determine if T is a vector, and extract element type
+    template <typename T>
+    struct is_vector : std::false_type { };
+
+    template <typename T, typename Alloc>
+    struct is_vector<std::vector<T, Alloc>> : std::true_type { };
+
+    template <typename T>
+    inline constexpr bool is_vector_v = is_vector<T>::value;
+
+    template <typename T>
+    struct vector_element { using type = void; };
+
+    template <typename T, typename Alloc>
+    struct vector_element<std::vector<T, Alloc>> { using type = T; };
+
+    template <typename T>
+    using vector_element_t = typename vector_element<T>::type;
+
+
+
+    // Traits to determine if T is an Array2d, and extract element type
+    template <typename T>
+    struct is_array_2d : std::false_type { };
+
+    template <typename T>
+    struct is_array_2d<Array2d<T>> : std::true_type { };
+
+    template <typename T>
+    inline constexpr bool is_array_2d_v = is_array_2d<T>::value;
+
+    template <typename T>
+    struct array2d_element { using type = void; };
+
+    template <typename T>
+    struct array2d_element<Array2d<T>> { using type = T; };
+
+    template <typename T>
+    using array2d_element_t = typename array2d_element<T>::type;
+
+
+
+    // Umbrella trait to determine if T is any container
+    template <typename T>
+    inline constexpr bool is_container_v = is_vector_v<T> || is_array_2d_v<T>;
 
 
 
@@ -129,7 +184,7 @@ namespace dae
 
             T* component { static_cast<T*>(m_ComponentMap[id].get()) };
 
-            component->OnInit(m_Ctx);  // call OnInit
+            component->OnInit(m_Ctx); // call OnInit
 
             return static_cast<T*>(m_ComponentMap[id].get());
         }
@@ -137,7 +192,7 @@ namespace dae
         /* Returns a component of the object based on type
            (returns nullptr if object has no component of type T) */
         template<ComponentType T>
-        T* GetComponent()
+        T* GetComponent() const
         {
             auto it = m_ComponentMap.find(typeid(T));
 
@@ -145,6 +200,24 @@ namespace dae
                 return nullptr;
 
             return static_cast<T*>(it->second.get());
+        }
+
+        /* Return a component of it is can be dynamic_cast to the type T
+           (T can be any type, for example, an interface) */
+        template<typename T>
+        T* GetComponentOfType() const
+        {
+            for (auto& [id, comp] : m_ComponentMap)
+            {
+                T* component { dynamic_cast<T*>(comp.get()) };
+
+                if (component == nullptr)
+                    continue;
+
+                return component;
+            }
+
+            return nullptr;
         }
 
         /* Removes a component from the object based on type */
@@ -220,6 +293,8 @@ namespace dae
         EngineCtx m_Ctx { };
     };
 
+
+
     class Component
     {
         public:
@@ -257,8 +332,25 @@ namespace dae
         /* Called before the object is destroyed */
         virtual void OnDestroy(EngineCtx&) { }
 
-        /* Returns the owning game object of this component */
+        /* Returns the owning GameObject of this component */
         GameObject* GetOwner() const;
+
+        /* Same as GetOwner()->GetTransform() */
+        Transform& GetTransform() const;
+
+        /* Same as GetOwner()->GetComponent<T>() */
+        template<ComponentType T>
+        T* GetComponent() const
+        {
+            return m_Owner->GetComponent<T>();
+        }
+
+        /* Same as GetOwner()->GetComponentOfType<T>() */
+        template<typename T>
+        T* GetComponentOfType()
+        {
+            return m_Owner->GetComponentOfType<T>();
+        }
 
         protected:
 
@@ -278,79 +370,32 @@ namespace dae
             factory[name] = [](GameObject* obj) { return obj->AddComponentNoInit<CompT>(); };
         }
 
-        /* Registeres the parameters for parsing */
+        /* Registers the parameters for parsing */
         template <typename T, ComponentType CompT>
         static void RegisterParameter(const std::string& key, T CompT::* member)
         {
             auto& registry = GetRegistry()[typeid(CompT)][typeid(T)];
-            registry[key] = [member](Component* instance, const std::string& valueStr)
+            registry[key] = [key, member] (Component* instance, const std::string& valueStr)
             {
                 std::istringstream iss(valueStr);
                 T value { };
 
-                if constexpr (std::is_same_v<T, glm::vec2>)
+                if constexpr (is_container_v<T>)
                 {
-                    if (!(iss >> value.x >> value.y))
+                    if (!ParseContainer(iss, value))
                     {
-                        logError("Failed to parse glm::vec2 value.");
-
-                        return;
-                    }
-                }
-                else if constexpr (std::is_same_v<T, glm::vec3>)
-                {
-                    if (!(iss >> value.x >> value.y >> value.z))
-                    {
-                        logError("Failed to parse glm::vec3 value.");
-
-                        return;
-                    }
-                }
-                else if constexpr (std::is_same_v<T, glm::vec4>)
-                {
-                    if (!(iss >> value.x >> value.y >> value.z >> value.w))
-                    {
-                        logError("Failed to parse glm::vec4 value.");
-
-                        return;
-                    }
-                }
-                else if constexpr (std::is_same_v<T, SDL_Color>)
-                {
-                    glm::vec4 val { };
-
-                    if (!(iss >> val.x >> val.y >> val.z >> val.w))
-                    {
-                        logError("Failed to parse SDL_Color value.");
-
-                        return;
-                    }
-
-                    const glm::vec4 clamped { glm::clamp(val, 0.0f, 1.0f) };
-
-                    value = SDL_Color {
-                        static_cast<Uint8>(clamped.r * 255.0f),
-                        static_cast<Uint8>(clamped.g * 255.0f),
-                        static_cast<Uint8>(clamped.b * 255.0f),
-                        static_cast<Uint8>(clamped.a * 255.0f)
-                    };
-                }
-                else if constexpr (std::is_same_v<T, std::string>)
-                {
-                    value = std::string(std::istreambuf_iterator<char>(iss), std::istreambuf_iterator<char>());
-
-                    if (value.empty())
-                    {
-                        logError("Failed to parse std::string value.");
+                        logError("Failed to parse <{}> container parameter from string: {}",
+                            key, valueStr);
 
                         return;
                     }
                 }
                 else
                 {
-                    if (!(iss >> value))
+                    if (!ParseSingle(iss, value))
                     {
-                        logError("Failed to parse value.");
+                        logError("Failed to parse <{}> single parameter from string: {}",
+                            key, valueStr);
 
                         return;
                     }
@@ -361,6 +406,161 @@ namespace dae
         }
 
         private:
+
+        /* Parses a single value */
+        template <typename T>
+        static bool ParseSingle(std::istringstream& iss, T& value)
+        {
+            if constexpr (std::is_same_v<T, glm::vec2>)
+            {
+                if (!(iss >> value.x >> value.y))
+                {
+                    logError("Failed to parse glm::vec2 value.");
+
+                    return false;
+                }
+
+                return true;
+            }
+            else if constexpr (std::is_same_v<T, glm::vec3>)
+            {
+                if (!(iss >> value.x >> value.y >> value.z))
+                {
+                    logError("Failed to parse glm::vec3 value.");
+
+                    return false;
+                }
+
+                return true;
+            }
+            else if constexpr (std::is_same_v<T, glm::vec4>)
+            {
+                if (!(iss >> value.x >> value.y >> value.z >> value.w))
+                {
+                    logError("Failed to parse glm::vec4 value.");
+
+                    return false;
+                }
+
+                return true;
+            }
+            else if constexpr (std::is_same_v<T, SDL_Color>)
+            {
+                glm::vec4 val { };
+
+                if (!(iss >> val.x >> val.y >> val.z >> val.w))
+                {
+                    logError("Failed to parse SDL_Color value.");
+
+                    return false;
+                }
+
+                const glm::vec4 clamped { glm::clamp(val, 0.0f, 1.0f) };
+
+                value = SDL_Color {
+                    static_cast<Uint8>(clamped.r * 255.0f),
+                    static_cast<Uint8>(clamped.g * 255.0f),
+                    static_cast<Uint8>(clamped.b * 255.0f),
+                    static_cast<Uint8>(clamped.a * 255.0f)
+                };
+
+                return true;
+            }
+            else if constexpr (std::is_same_v<T, std::string>)
+            {
+                value = std::string(
+                    std::istreambuf_iterator<char>(iss),
+                    std::istreambuf_iterator<char>()
+                );
+
+                if (value.empty())
+                {
+                    logError("Failed to parse std::string value.");
+
+                    return false;
+                }
+
+                return true;
+            }
+            else
+            {
+                if (!(iss >> value))
+                {
+                    logError("Failed to parse value.");
+
+                    return false;
+                }
+
+                return true;
+            }
+        }
+
+        /* Parses a container of values */
+        template <typename ContainerT>
+        static bool ParseContainer(std::istringstream& iss, ContainerT& container)
+        {
+            if constexpr (is_vector_v<ContainerT>)
+            {
+                using ElemT = vector_element_t<ContainerT>;
+
+                while (!iss.eof())
+                {
+                    ElemT elem {};
+
+                    if (!ParseSingle(iss, elem))
+                    {
+                        logError("Failed to parse std::vector element value");
+
+                        return false;
+                    }
+
+                    container.push_back(elem);
+                }
+
+                if (container.empty())
+                {
+                    logError("Failed to parse std::vector value");
+
+                    return false;
+                }
+
+                return true;
+            }
+            else if constexpr (is_array_2d_v<ContainerT>)
+            {
+                int rows { };
+                int cols { };
+
+                if (!(iss >> rows >> cols))
+                {
+                    logError("Failed to parse rows/cols value of Array2d");
+
+                    return false;
+                }
+
+                container.Resize(rows, cols);
+
+                for (int r = 0; r < rows; r++)
+                {
+                    for (int c = 0; c < cols; c++)
+                    {
+                        if (!ParseSingle(iss, container(r, c)))
+                        {
+                            logError("Failed to parse cell [{}][{}] values of Array2d", r, c);
+
+                            return false;
+                        }
+                    }
+                }
+
+                return true;
+            }
+            else
+            {
+                static_assert(!sizeof(ContainerT), "ParseContainer: unsupported container type");
+                return false;
+            }
+        }
 
         /* Returns the map of component names and their respective creation functions */
         static ComponentFactory& GetFactory()

@@ -28,6 +28,7 @@ namespace dae
 
         std::string m_TexturePath { };
         int m_DrawOrder { };
+        float m_Scale { 1.0f };
 
         std::shared_ptr<Texture2D> m_Texture { };
 

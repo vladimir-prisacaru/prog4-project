@@ -91,6 +91,11 @@ namespace dae
         return m_Owner;
     }
 
+    Transform& Component::GetTransform() const
+    {
+        return m_Owner->GetTransform();
+    }
+
     Component::ComponentFactory& Component::GetComponentFactory()
     {
         return GetFactory();

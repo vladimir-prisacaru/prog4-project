@@ -22,6 +22,8 @@ namespace dae
         void Update(EngineCtx& ctx) override;
         void OnDestroy(EngineCtx& ctx) override;
 
+        bool IsPlayerDigging(Player* player);
+
 
 
         private:
@@ -82,6 +84,7 @@ namespace dae
 
         // Last tile visited by the player, keyed by player ptr
         std::unordered_map<Player*, std::pair<int, int>> m_LastPlayerTile { };
+        std::unordered_map<Player*, bool> m_PlayerDigState { };
         // Component that owns the tile grid
         GridComponent* m_Grid { };
         // All active players

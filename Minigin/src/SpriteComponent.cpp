@@ -194,7 +194,7 @@ namespace dae
 
     void SpriteComponent::SetAnimationIfChanged(const std::string& name)
     {
-        if (m_CurrentAnim != m_Anims.end() && m_CurrentAnim->first != name)
+        if (m_CurrentAnim != m_Anims.end() && m_CurrentAnim->first == name)
             return;
 
         SetAnimation(name);

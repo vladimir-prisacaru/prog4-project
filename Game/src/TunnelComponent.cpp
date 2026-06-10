@@ -28,6 +28,7 @@ namespace dae
         for (auto& player : m_Players)
         {
             m_LastPlayerTile[player] = INVALID_TILE_COORD;
+            m_PlayerDigState[player] = false;
         }
     }
 
@@ -59,9 +60,21 @@ namespace dae
                 continue;
             }
 
-            // Skip if coords didn't change
+            // If coords didn't change
             if (oldCoords == newCoords)
+            {
+                if (int dir { }, dugoutLevel { };
+                    IsTileDugout(m_Grid->GetTileId(oldCoords), dir, dugoutLevel))
+                {
+                    m_PlayerDigState[player] = true;
+                }
+                else
+                {
+                    m_PlayerDigState[player] = false;
+                }
+
                 continue;
+            }
 
             const auto [oldRow, oldCol] { oldCoords };
             const auto [newRow, newCol] { newCoords };
@@ -94,6 +107,16 @@ namespace dae
     void TunnelComponent::OnDestroy(EngineCtx&)
     {
         // nothing to destroy yet
+    }
+
+    bool TunnelComponent::IsPlayerDigging(Player* player)
+    {
+        auto it { m_PlayerDigState.find(player) };
+
+        if (it != m_PlayerDigState.end())
+            return m_PlayerDigState[player];
+
+        return false;
     }
 
     void TunnelComponent::ResolveOldTile(int outDir, TileCoords coords)

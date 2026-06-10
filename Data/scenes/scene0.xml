@@ -139,16 +139,16 @@
 			<position>16 16</position>
 		</transform>
 		<components>
-			<texture_component>
-				<texture_path>default.png</texture_path>
-				<pivot>0.5 0.5</pivot>
-				<draw_order>11</draw_order>
-				<scale>0.25</scale>
-			</texture_component>
 			<player>
 				<player_id>0</player_id>
 				<move_speed>100</move_speed>
 			</player>
+			<sprite_component>
+				<spritesheet_path>anim/player.png</spritesheet_path>
+				<animations_path>anim/player.json</animations_path>
+				<draw_order>10</draw_order>
+				<scale>3.0</scale>
+			</sprite_component>
 		</components>
 	</object>
 

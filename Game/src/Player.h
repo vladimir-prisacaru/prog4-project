@@ -8,6 +8,7 @@ namespace dae
 {
     class TunnelComponent;
     class GridComponent;
+    class SpriteComponent;
     class PlayerMoveCommand;
 
     class Player : public Component, public Registrar<Player>, public ICollisionReceiver
@@ -26,14 +27,23 @@ namespace dae
         virtual void OnOverlap(ICollider* other) override;
         virtual void OnOverlapEnd(ICollider* other) override;
 
-        int GetId() { return m_PlayerId; }
+        int GetId() const { return m_PlayerId; }
 
         private:
+
+        enum class State
+        {
+            Idle,
+            Moving,
+            Digging
+        };
 
         friend class PlayerMoveCommand;
 
         // Helper to resolve movement
         void HandleMovement(float deltaTime);
+        // Helper to resolve animations
+        void HandleAnimations();
 
         // Called by PlayerMoveCommand
         void SetMoveDir(glm::vec2 moveDir);
@@ -43,20 +53,27 @@ namespace dae
         void RemoveInput(InputManager* input);
 
         // Helper to get the center of a tile
-        glm::vec2 GetTileCenter(glm::vec2 pos);
+        glm::vec2 GetTileCenter(glm::vec2 pos) const;
         // Helper to get constrained direction (only up, down, left and right, no diagonals)
-        glm::vec2 GetDir(glm::vec2 inputDir);
+        glm::vec2 GetDir(glm::vec2 inputDir) const;
+        // Helper to get encoded direction (0 = up, 1 = right, 2 = down, 3 = up)
+        int GetDirInt(glm::vec2 dir);
 
         // Params
         int m_PlayerId { };
         float m_MoveSpeed { };
 
+        // State machine
+        State m_CurrentState { State::Idle };
+
         // Movement state
         glm::vec2 m_InputDir { 0.0f, 0.0f };
         glm::vec2 m_LastDir { 0.0f, 0.0f };
 
+        // Cached components
         TunnelComponent* m_Tunnel { };
         GridComponent* m_Grid { };
+        SpriteComponent* m_Sprite { };
     };
 
     class PlayerMoveCommand final : public InputCommand

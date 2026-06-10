@@ -51,6 +51,9 @@ namespace dae
         void SetAnimationIfChanged(const std::string& name);
         bool IsAnimationFinished(const std::string& name) const;
 
+        bool IsMirrored() { return m_IsMirrored; }
+        void SetMirrored(bool mirrored) { m_IsMirrored = mirrored; }
+
         private:
 
         using AnimationMap = std::unordered_map<std::string, Animation>;

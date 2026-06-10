@@ -2,6 +2,9 @@
 #include "InputManager.h"
 #include "SceneManager.h"
 #include "TunnelComponent.h"
+#include "SpriteComponent.h"
+
+#include <array>
 
 namespace dae
 {
@@ -21,6 +24,8 @@ namespace dae
         m_Tunnel = ctx.sceneManager->GetFirstComponentByType<TunnelComponent>();
         // Get the grid component
         m_Grid = m_Tunnel->GetComponent<GridComponent>();
+        // Get sprite component
+        m_Sprite = GetComponent<SpriteComponent>();
 
         // Snap to current tile center
         auto& transform { GetTransform() };
@@ -33,6 +38,7 @@ namespace dae
             return;
 
         HandleMovement(ctx.deltaTime);
+        HandleAnimations();
     }
 
     void Player::OnDestroy(EngineCtx& ctx)
@@ -52,9 +58,24 @@ namespace dae
 
     void Player::HandleMovement(float deltaTime)
     {
+        // Skip if can't move
+        if (m_CurrentState != State::Idle && m_CurrentState != State::Moving &&
+            m_CurrentState != State::Digging)
+            return;
+
         // Skip if no input was present this frame
         if (glm::length(m_InputDir) < 0.01f)
+        {
+            m_CurrentState = State::Idle;
+
             return;
+        }
+
+        // Switch moving/digging state
+        if (m_Tunnel->IsPlayerDigging(this))
+            m_CurrentState = State::Digging;
+        else
+            m_CurrentState = State::Moving;
 
         // Consume input
         const auto inputDir { GetDir(m_InputDir) };
@@ -108,6 +129,34 @@ namespace dae
         transform.SetLocalPos(center + displacement);
 
         m_LastDir = inputDir;
+    }
+
+    void Player::HandleAnimations()
+    {
+        static const std::array<std::string, 4> idleNames {
+            "idle_up", "idle_right", "idle_down", "idle_left"
+        };
+
+        static const std::array<std::string, 4> moveNames {
+            "move_up", "move_right", "move_down", "move_left"
+        };
+
+        static const std::array<std::string, 4> digNames {
+            "dig_up", "dig_right", "dig_down", "dig_left"
+        };
+
+        switch (m_CurrentState)
+        {
+            case State::Idle:
+                m_Sprite->SetAnimationIfChanged(idleNames[GetDirInt(m_LastDir)]);
+                break;
+            case State::Moving:
+                m_Sprite->SetAnimationIfChanged(moveNames[GetDirInt(m_LastDir)]);
+                break;
+            case State::Digging:
+                m_Sprite->SetAnimationIfChanged(digNames[GetDirInt(m_LastDir)]);
+                break;
+        }
     }
 
     void Player::SetMoveDir(glm::vec2 moveDir)
@@ -196,7 +245,7 @@ namespace dae
         }
     }
 
-    glm::vec2 Player::GetTileCenter(glm::vec2 pos)
+    glm::vec2 Player::GetTileCenter(glm::vec2 pos) const
     {
         if (m_Grid == nullptr)
             return pos;
@@ -215,10 +264,10 @@ namespace dae
         };
     }
 
-    glm::vec2 Player::GetDir(glm::vec2 inputDir)
+    glm::vec2 Player::GetDir(glm::vec2 inputDir) const
     {
         if (glm::length(inputDir) < 0.001f)
-            return glm::vec2 { 0.0f, 0.0f }; // or previous direction
+            return glm::vec2 { 0.0f, 0.0f };
 
         inputDir = glm::normalize(inputDir);
 
@@ -244,6 +293,33 @@ namespace dae
         }
 
         return bestDir;
+    }
+
+    int Player::GetDirInt(glm::vec2 dir)
+    {
+        if (glm::length(dir) < 0.01f)
+            return 0;
+
+        dir = glm::normalize(dir);
+
+        const glm::vec2 u { 0.0f, -1.0f };
+        const glm::vec2 r { 1.0f,  0.0f };
+        const glm::vec2 d { 0.0f,  1.0f };
+        const glm::vec2 l { -1.0f, 0.0f };
+
+        float bestDot = glm::dot(dir, u);
+        int bestIndex = 0;
+
+        float dotR = glm::dot(dir, r);
+        if (dotR > bestDot) { bestDot = dotR; bestIndex = 1; }
+
+        float dotD = glm::dot(dir, d);
+        if (dotD > bestDot) { bestDot = dotD; bestIndex = 2; }
+
+        float dotL = glm::dot(dir, l);
+        if (dotL > bestDot) { bestDot = dotL; bestIndex = 3; }
+
+        return bestIndex;
     }
 
     void PlayerMoveCommand::Execute()

@@ -1,0 +1,172 @@
+{
+	"default": {
+        "isLooping": true,
+        "frames": [
+            {
+                "top": 0, "left": 16, "width": 16, "height": 16,
+                "frameTime": 0.5,
+                "pivot": { "x": 0.5, "y": 0.5 }
+            }
+        ]
+    },
+    "idle_up": {
+        "isLooping": true,
+        "frames": [
+            {
+                "top": 0, "left": 16, "width": 16, "height": 16,
+                "frameTime": 0.5,
+                "pivot": { "x": 0.5, "y": 0.5 }
+            }
+        ]
+    },
+	"idle_right": {
+        "isLooping": true,
+        "frames": [
+            {
+                "top": 0, "left": 48, "width": 16, "height": 16,
+                "frameTime": 0.5,
+                "pivot": { "x": 0.5, "y": 0.5 }
+            }
+        ]
+    },
+	"idle_down": {
+        "isLooping": true,
+        "frames": [
+            {
+                "top": 0, "left": 80, "width": 16, "height": 16,
+                "frameTime": 0.5,
+                "pivot": { "x": 0.5, "y": 0.5 }
+            }
+        ]
+    },
+	"idle_left": {
+        "isLooping": true,
+        "frames": [
+            {
+                "top": 0, "left": 112, "width": 16, "height": 16,
+                "frameTime": 0.5,
+                "pivot": { "x": 0.5, "y": 0.5 }
+            }
+        ]
+    },
+	"move_up": {
+        "isLooping": true,
+        "frames": [
+            {
+                "top": 0, "left": 0, "width": 16, "height": 16,
+                "frameTime": 0.1,
+                "pivot": { "x": 0.5, "y": 0.5 }
+            },
+			{
+                "top": 0, "left": 16, "width": 16, "height": 16,
+                "frameTime": 0.1,
+                "pivot": { "x": 0.5, "y": 0.5 }
+            }
+        ]
+    },
+	"move_right": {
+        "isLooping": true,
+        "frames": [
+            {
+                "top": 0, "left": 32, "width": 16, "height": 16,
+                "frameTime": 0.1,
+                "pivot": { "x": 0.5, "y": 0.5 }
+            },
+			{
+                "top": 0, "left": 48, "width": 16, "height": 16,
+                "frameTime": 0.1,
+                "pivot": { "x": 0.5, "y": 0.5 }
+            }
+        ]
+    },
+	"move_down": {
+        "isLooping": true,
+        "frames": [
+            {
+                "top": 0, "left": 64, "width": 16, "height": 16,
+                "frameTime": 0.1,
+                "pivot": { "x": 0.5, "y": 0.5 }
+            },
+			{
+                "top": 0, "left": 80, "width": 16, "height": 16,
+                "frameTime": 0.1,
+                "pivot": { "x": 0.5, "y": 0.5 }
+            }
+        ]
+    },
+	"move_left": {
+        "isLooping": true,
+        "frames": [
+            {
+                "top": 0, "left": 96, "width": 16, "height": 16,
+                "frameTime": 0.1,
+                "pivot": { "x": 0.5, "y": 0.5 }
+            },
+			{
+                "top": 0, "left": 112, "width": 16, "height": 16,
+                "frameTime": 0.1,
+                "pivot": { "x": 0.5, "y": 0.5 }
+            }
+        ]
+    },
+	"dig_up": {
+        "isLooping": true,
+        "frames": [
+            {
+                "top": 16, "left": 0, "width": 16, "height": 16,
+                "frameTime": 0.1,
+                "pivot": { "x": 0.5, "y": 0.5 }
+            },
+			{
+                "top": 16, "left": 16, "width": 16, "height": 16,
+                "frameTime": 0.1,
+                "pivot": { "x": 0.5, "y": 0.5 }
+            }
+        ]
+    },
+	"dig_right": {
+        "isLooping": true,
+        "frames": [
+            {
+                "top": 16, "left": 32, "width": 16, "height": 16,
+                "frameTime": 0.1,
+                "pivot": { "x": 0.5, "y": 0.5 }
+            },
+			{
+                "top": 16, "left": 48, "width": 16, "height": 16,
+                "frameTime": 0.1,
+                "pivot": { "x": 0.5, "y": 0.5 }
+            }
+        ]
+    },
+	"dig_down": {
+        "isLooping": true,
+        "frames": [
+            {
+                "top": 16, "left": 64, "width": 16, "height": 16,
+                "frameTime": 0.1,
+                "pivot": { "x": 0.5, "y": 0.5 }
+            },
+			{
+                "top": 16, "left": 80, "width": 16, "height": 16,
+                "frameTime": 0.1,
+                "pivot": { "x": 0.5, "y": 0.5 }
+            }
+        ]
+    },
+	"dig_left": {
+        "isLooping": true,
+        "frames": [
+            {
+                "top": 16, "left": 96, "width": 16, "height": 16,
+				"frameTime": 0.1,
+                "pivot": { "x": 0.5, "y": 0.5 }
+            },
+			{
+                "top": 16, "left": 112, "width": 16, "height": 16,
+				"frameTime": 0.1,
+                "pivot": { "x": 0.5, "y": 0.5 }
+            }
+        ]
+    }
+}

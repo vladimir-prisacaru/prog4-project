@@ -33,6 +33,7 @@ namespace dae
         /* Call before Render() to create a new frame for ImGui */
         void ImGuiNewFrame();
 
+        void RenderTexture(const Texture2D& texture, const SDL_FRect& dstRect) const;
         void RenderTexture(const Texture2D& texture, const SDL_FRect& srcRect, const SDL_FRect& dstRect) const;
         void RenderTexture(const Texture2D& texture, float x, float y) const;
         void RenderTexture(const Texture2D& texture, float x, float y, float scale) const;

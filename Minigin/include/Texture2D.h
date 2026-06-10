@@ -13,7 +13,8 @@ namespace dae
         public:
 
         explicit Texture2D(SDL_Texture* texture);
-        explicit Texture2D(const std::string& fullPath, SDL_Renderer* renderer);
+        explicit Texture2D(const std::string& fullPath, SDL_Renderer* renderer,
+            bool pointFilter = false);
         ~Texture2D();
 
         Texture2D(const Texture2D&) = delete;

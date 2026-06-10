@@ -482,6 +482,21 @@ namespace dae
 
                 return true;
             }
+            else if constexpr (std::is_same_v<T, bool>)
+            {
+                iss >> std::boolalpha;
+
+                if (!(iss >> value))
+                {
+                    logError("Failed to parse bool value.");
+
+                    return false;
+                }
+
+                iss >> std::noboolalpha;
+
+                return true;
+            }
             else
             {
                 if (!(iss >> value))

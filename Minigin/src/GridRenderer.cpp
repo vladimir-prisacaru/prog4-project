@@ -9,6 +9,7 @@ void dae::GridRenderer::Register()
     RegisterComponent<GridRenderer>("grid_renderer");
 
     RegisterParameter("spritesheet_path", &GridRenderer::m_SpritesheetPath);
+    RegisterParameter("point_filter", &GridRenderer::m_PointFilter);
     RegisterParameter("tile_src_size", &GridRenderer::m_TileSrcSize);
     RegisterParameter("draw_order", &GridRenderer::m_DrawOrder);
 }
@@ -19,7 +20,7 @@ void dae::GridRenderer::OnInit(EngineCtx& ctx)
 
     m_Grid = GetComponent<GridComponent>();
 
-    m_Spritesheet = ctx.resourceManager->LoadTexture(m_SpritesheetPath);
+    m_Spritesheet = ctx.resourceManager->LoadTexture(m_SpritesheetPath, m_PointFilter);
 }
 
 void dae::GridRenderer::OnDestroy(EngineCtx& ctx)

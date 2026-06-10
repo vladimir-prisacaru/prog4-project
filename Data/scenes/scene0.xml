@@ -113,10 +113,11 @@
 					-1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 					-1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 				</tiles>
-				<tile_size>32.0</tile_size>
+				<tile_size>64.0</tile_size>
 			</grid_component>
 			<grid_renderer>
 				<spritesheet_path>spritesheets/tunnel.png</spritesheet_path>
+				<point_filter>true</point_filter>
 				<tile_src_size>16</tile_src_size>
 				<draw_order>10</draw_order>
 			</grid_renderer>
@@ -140,8 +141,9 @@
 		<components>
 			<texture_component>
 				<texture_path>default.png</texture_path>
+				<pivot>0.5 0.5</pivot>
 				<draw_order>11</draw_order>
-				<scale>0.5</scale>
+				<scale>0.25</scale>
 			</texture_component>
 			<player>
 				<player_id>0</player_id>

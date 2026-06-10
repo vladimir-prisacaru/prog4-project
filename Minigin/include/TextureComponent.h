@@ -27,6 +27,7 @@ namespace dae
         private:
 
         std::string m_TexturePath { };
+        glm::vec2 m_Pivot { };
         int m_DrawOrder { };
         float m_Scale { 1.0f };
 

@@ -26,6 +26,7 @@ namespace dae
 
         // Params
         std::string m_SpritesheetPath { };
+        bool m_PointFilter { };
         int m_TileSrcSize { };
         int m_DrawOrder { };
 

@@ -7,6 +7,7 @@ void dae::TextureComponent::Register()
     RegisterComponent<TextureComponent>("texture_component");
 
     RegisterParameter("texture_path", &TextureComponent::m_TexturePath);
+    RegisterParameter("pivot", &TextureComponent::m_Pivot);
     RegisterParameter("draw_order", &TextureComponent::m_DrawOrder);
     RegisterParameter("scale", &TextureComponent::m_Scale);
 }
@@ -48,6 +49,10 @@ void dae::TextureComponent::Render(const Renderer* renderer) const
     if (m_Texture == nullptr)
         return;
 
-    const auto& pos { GetOwner()->GetTransform().GetWorldPos() };
+
+    const auto size { m_Texture->GetSize() * m_Scale };
+    const auto offset { m_Pivot * size };
+    const auto pos { GetOwner()->GetTransform().GetWorldPos() - offset };
+
     renderer->RenderTexture(*m_Texture, pos.x, pos.y, m_Scale);
 }

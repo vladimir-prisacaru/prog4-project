@@ -22,7 +22,7 @@ namespace dae
         ResourceManager& operator=(const ResourceManager& other) = delete;
         ResourceManager& operator=(ResourceManager&& other) = delete;
 
-        std::shared_ptr<Texture2D> LoadTexture(const std::string& file);
+        std::shared_ptr<Texture2D> LoadTexture(const std::string& file, bool pointFilter = false);
         std::shared_ptr<Font> LoadFont(const std::string& file, uint8_t size);
 
         private:

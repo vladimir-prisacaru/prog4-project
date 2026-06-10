@@ -4,7 +4,8 @@
 
 #include <stdexcept>
 
-dae::Texture2D::Texture2D(const std::string& fullPath, SDL_Renderer* renderer)
+dae::Texture2D::Texture2D(const std::string& fullPath, SDL_Renderer* renderer,
+    bool pointFilter)
 {
     SDL_Surface* surface = SDL_LoadPNG(fullPath.c_str());
     if (!surface)
@@ -27,6 +28,9 @@ dae::Texture2D::Texture2D(const std::string& fullPath, SDL_Renderer* renderer)
             std::string("Failed to create texture from surface: ") + SDL_GetError()
         );
     }
+
+    if (pointFilter)
+        SDL_SetTextureScaleMode(m_texture, SDL_SCALEMODE_NEAREST);
 }
 
 dae::Texture2D::Texture2D(SDL_Texture* texture) : m_texture { texture }

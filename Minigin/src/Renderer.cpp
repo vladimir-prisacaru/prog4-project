@@ -136,6 +136,11 @@ void dae::Renderer::ImGuiNewFrame()
     m_CreatedNewFrameImGui = true;
 }
 
+void dae::Renderer::RenderTexture(const Texture2D& texture, const SDL_FRect& dstRect) const
+{
+    SDL_RenderTexture(GetSDLRenderer(), texture.GetSDLTexture(), nullptr, &dstRect);
+}
+
 void dae::Renderer::RenderTexture(const Texture2D& texture, const SDL_FRect& srcRect, const SDL_FRect& dstRect) const
 {
     SDL_RenderTexture(GetSDLRenderer(), texture.GetSDLTexture(), &srcRect, &dstRect);

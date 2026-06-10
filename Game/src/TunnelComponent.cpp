@@ -2,10 +2,16 @@
 #include "GridComponent.h"
 #include "SceneManager.h"
 #include "Player.h"
+#include "Physics.h"
+
+#include <array>
+
 
 
 namespace dae
 {
+    TunnelComponent::~TunnelComponent() { };
+
     void TunnelComponent::Register()
     {
         RegisterComponent<TunnelComponent>("tunnel_component");
@@ -25,11 +31,17 @@ namespace dae
 
         m_Players = ctx.sceneManager->GetAllComponentsByType<Player>();
 
+        // Set initial player state
         for (auto& player : m_Players)
         {
             m_LastPlayerTile[player] = INVALID_TILE_COORD;
             m_PlayerDigState[player] = false;
         }
+
+        // Create graph
+        m_Graph = std::make_unique<Graph>();
+        RebuildGraph();
+        ctx.physics->AddCollider(m_Graph.get());
     }
 
     void TunnelComponent::Update(EngineCtx& ctx)
@@ -104,9 +116,9 @@ namespace dae
         }
     }
 
-    void TunnelComponent::OnDestroy(EngineCtx&)
+    void TunnelComponent::OnDestroy(EngineCtx& ctx)
     {
-        // nothing to destroy yet
+        ctx.physics->RemoveCollider(m_Graph.get());
     }
 
     bool TunnelComponent::IsPlayerDigging(Player* player)
@@ -118,6 +130,17 @@ namespace dae
 
         return false;
     }
+
+    Graph* TunnelComponent::GetNavigationGraph()
+    {
+        return m_Graph.get();
+    }
+
+
+
+    // -----------------------
+    // --- Tile resolution ---
+    // -----------------------
 
     void TunnelComponent::ResolveOldTile(int outDir, TileCoords coords)
     {
@@ -195,7 +218,10 @@ namespace dae
         if (IsTileFull(newTileId))
         {
             // TODO: CHANGE FROM m_DugoutLevels to 0, when digging is implemented
-            m_Grid->SetTileId(coords, GetDugoutTileId(inDir, m_DugoutLevels-1));
+            m_Grid->SetTileId(coords, GetDugoutTileId(inDir, m_DugoutLevels - 1));
+
+            // Add tile new dug out tile to the graph
+            AddTileToGraph(coords);
         }
 
         // Going into tunnel
@@ -257,22 +283,11 @@ namespace dae
         }
     }
 
-    constexpr int TunnelComponent::OppositeDir(int dir)
-    {
-        switch (dir)
-        {
-            case DIR_U:
-                return DIR_D;
-            case DIR_R:
-                return DIR_L;
-            case DIR_D:
-                return DIR_U;
-            case DIR_L:
-                return DIR_R;
-        }
 
-        return INVALID_DIR;
-    }
+
+    // -------------------------
+    // --- Direction helpers ---
+    // -------------------------
 
     constexpr int TunnelComponent::GetDir(int dRow, int dCol)
     {
@@ -294,17 +309,40 @@ namespace dae
         return INVALID_DIR;
     }
 
-    bool TunnelComponent::IsTileFull(int id)
+    constexpr int TunnelComponent::OppositeDir(int dir)
+    {
+        switch (dir)
+        {
+            case DIR_U:
+                return DIR_D;
+            case DIR_R:
+                return DIR_L;
+            case DIR_D:
+                return DIR_U;
+            case DIR_L:
+                return DIR_R;
+        }
+
+        return INVALID_DIR;
+    }
+
+
+
+    // --------------------
+    // --- Tile Helpers ---
+    // --------------------
+
+    bool TunnelComponent::IsTileFull(int id) const
     {
         return id == m_FullTileId;
     }
 
-    bool TunnelComponent::IsTileEmpty(int id)
+    bool TunnelComponent::IsTileEmpty(int id) const
     {
         return id == m_EmptyTileId;
     }
 
-    bool TunnelComponent::IsTileDugout(int id, int& dir, int& dugoutLevel)
+    bool TunnelComponent::IsTileDugout(int id, int& dir, int& dugoutLevel) const
     {
         auto it { std::find(m_DugoutTileIds.begin(), m_DugoutTileIds.end(), id) };
 
@@ -320,7 +358,7 @@ namespace dae
         return true;
     }
 
-    bool TunnelComponent::IsTileTunnel(int id, int& dir)
+    bool TunnelComponent::IsTileTunnel(int id, int& dir) const
     {
         auto it { std::find(m_TunnelTileIds.begin(), m_TunnelTileIds.end(), id) };
 
@@ -334,7 +372,7 @@ namespace dae
         return true;
     }
 
-    bool TunnelComponent::IsTileEdge(int id, int& dir)
+    bool TunnelComponent::IsTileEdge(int id, int& dir) const
     {
         auto it { std::find(m_EdgeTileIds.begin(), m_EdgeTileIds.end(), id) };
 
@@ -348,7 +386,7 @@ namespace dae
         return true;
     }
 
-    bool TunnelComponent::IsTileCorner(int id, int& dir1, int& dir2)
+    bool TunnelComponent::IsTileCorner(int id, int& dir1, int& dir2) const
     {
         auto it { std::find(m_CornerTileIds.begin(), m_CornerTileIds.end(), id) };
 
@@ -438,4 +476,118 @@ namespace dae
     }
 
 
+
+    // ---------------------
+    // --- Graph Helpers ---
+    // ---------------------
+
+    glm::vec2 TunnelComponent::GetTileCenter(TileCoords coords) const
+    {
+        const glm::vec2 gridOrigin { m_Grid->GetTransform().GetWorldPos() };
+
+        const float tileSize { m_Grid->GetTileSize() };
+
+        return glm::vec2 {
+            gridOrigin.x + (static_cast<float>(coords.second) + 0.5f) * tileSize,
+            gridOrigin.y + (static_cast<float>(coords.first) + 0.5f) * tileSize
+        };
+    }
+
+    bool TunnelComponent::IsTilePassable(TileCoords coords) const
+    {
+        const int id { m_Grid->GetTileId(coords) };
+
+        if (id == INVALID_TILE_ID)
+            return false;
+
+        return !IsTileFull(id);
+    }
+
+    void TunnelComponent::AddTileToGraph(TileCoords coords)
+    {
+        if (m_Graph == nullptr)
+            return;
+
+        const glm::vec2 center { GetTileCenter(coords) };
+        const int nodeIdx { m_Graph->AddNode(center) };
+
+        // Orthogonal neighbours
+        const std::array<TileCoords, 4> neighbours { {
+            { coords.first - 1, coords.second },  // up
+            { coords.first + 1, coords.second },  // down
+            { coords.first,     coords.second - 1 }, // left
+            { coords.first,     coords.second + 1 }  // right
+        } };
+
+        for (const auto& nb : neighbours)
+        {
+            if (!IsTilePassable(nb))
+                continue;
+
+            const glm::vec2 nbCenter { GetTileCenter(nb) };
+            const int nbIdx { m_Graph->FindNode(nbCenter) };
+
+            if (nbIdx == -1)
+                continue;
+
+            m_Graph->AddConnection(nodeIdx, nbIdx);
+        }
+    }
+
+    void TunnelComponent::RebuildGraph()
+    {
+        if (m_Grid == nullptr || m_Graph == nullptr)
+            return;
+
+        const int rows { static_cast<int>(m_Grid->GetTiles().Rows()) };
+        const int cols { static_cast<int>(m_Grid->GetTiles().Cols()) };
+
+        // First pass: add all passable tile centers as nodes
+        for (int r = 0; r < rows; ++r)
+        {
+            for (int c = 0; c < cols; ++c)
+            {
+                const TileCoords coords { r, c };
+
+                if (IsTilePassable(coords))
+                    m_Graph->AddNode(GetTileCenter(coords));
+            }
+        }
+
+        // Second pass: connect adjacent passable tiles
+        for (int r = 0; r < rows; ++r)
+        {
+            for (int c = 0; c < cols; ++c)
+            {
+                const TileCoords coords { r, c };
+
+                if (!IsTilePassable(coords))
+                    continue;
+
+                const int nodeIdx { m_Graph->FindNode(GetTileCenter(coords)) };
+
+                if (nodeIdx == -1)
+                    continue;
+
+                // Only check right and down to avoid adding each edge twice
+                const std::array<TileCoords, 2> neighbours { {
+                    { r + 1, c },
+                    { r,     c + 1 }
+                } };
+
+                for (const auto& nb : neighbours)
+                {
+                    if (!IsTilePassable(nb))
+                        continue;
+
+                    const int nbIdx { m_Graph->FindNode(GetTileCenter(nb)) };
+
+                    if (nbIdx == -1)
+                        continue;
+
+                    m_Graph->AddConnection(nodeIdx, nbIdx);
+                }
+            }
+        }
+    }
 }

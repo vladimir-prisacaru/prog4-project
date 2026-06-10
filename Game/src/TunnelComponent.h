@@ -2,6 +2,7 @@
 
 #include "GameObject.h"
 #include "GridComponent.h"
+#include "Graph.h"
 
 
 
@@ -16,13 +17,14 @@ namespace dae
         static void Register();
 
         explicit TunnelComponent(GameObject* owner) : Component(owner) { };
-        virtual ~TunnelComponent() = default;
+        virtual ~TunnelComponent();
 
         void OnInit(EngineCtx& ctx) override;
         void Update(EngineCtx& ctx) override;
         void OnDestroy(EngineCtx& ctx) override;
 
         bool IsPlayerDigging(Player* player);
+        Graph* GetNavigationGraph();
 
 
 
@@ -43,12 +45,12 @@ namespace dae
         static constexpr int OppositeDir(int dir);
 
         // --- Tile Helpers ---
-        bool IsTileFull(int id);
-        bool IsTileEmpty(int id);
-        bool IsTileDugout(int id, int& dir, int& dugoutLevel);
-        bool IsTileTunnel(int id, int& dir);
-        bool IsTileEdge(int id, int& dir);
-        bool IsTileCorner(int id, int& dir1, int& dir2);
+        bool IsTileFull(int id) const;
+        bool IsTileEmpty(int id) const;
+        bool IsTileDugout(int id, int& dir, int& dugoutLevel) const;
+        bool IsTileTunnel(int id, int& dir) const;
+        bool IsTileEdge(int id, int& dir) const;
+        bool IsTileCorner(int id, int& dir1, int& dir2) const;
 
         int GetFullTileId();
         int GetEmptyTileId();
@@ -56,6 +58,20 @@ namespace dae
         int GetTunnelTileId(int dir);
         int GetEdgeTileId(int dir);
         int GetCornerTileId(int dir1, int dir2);
+
+        // --- Graph Helpers ---
+
+        // Returns the world-space center of a tile
+        glm::vec2 GetTileCenter(TileCoords coords) const;
+        // Returns true if the tile at coords is not solid (passable)
+        bool IsTilePassable(TileCoords coords) const;
+        // Ensures a node exists for this tile center and connects it to its
+        // passable orthogonal neighbours. Should be called whenever a tile
+        // transitions from solid to non-solid.
+        void AddTileToGraph(TileCoords coords);
+        // Rebuilds the entire graph from the current grid state.
+        // Called once at the end of OnInit for pre-dug tiles in the scene.
+        void RebuildGraph();
 
         // --- Params ---
 
@@ -70,7 +86,6 @@ namespace dae
         // 1: right-down, 2: down-left, 3: left-up;
         std::vector<int> m_CornerTileIds { };
         // Ids of tiles in the middle of the tunnel
-        // To get the correct tile m_TunnelTilesStartId + direction
         std::vector<int> m_TunnelTileIds { };
         // Ids of edge tiles
         std::vector<int> m_EdgeTileIds { };
@@ -84,10 +99,13 @@ namespace dae
 
         // Last tile visited by the player, keyed by player ptr
         std::unordered_map<Player*, std::pair<int, int>> m_LastPlayerTile { };
+        // Stores if the player was digging or not
         std::unordered_map<Player*, bool> m_PlayerDigState { };
         // Component that owns the tile grid
         GridComponent* m_Grid { };
         // All active players
         std::vector<Player*> m_Players { };
+        // Navigation graph of all dug out tile centers
+        std::unique_ptr<Graph> m_Graph { };
     };
 }

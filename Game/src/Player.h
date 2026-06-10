@@ -10,6 +10,7 @@ namespace dae
     class GridComponent;
     class SpriteComponent;
     class PlayerMoveCommand;
+    class TestGraphCommand;
 
     class Player : public Component, public Registrar<Player>, public ICollisionReceiver
     {
@@ -39,6 +40,7 @@ namespace dae
         };
 
         friend class PlayerMoveCommand;
+        friend class TestGraphCommand;
 
         // Helper to resolve movement
         void HandleMovement(float deltaTime);
@@ -74,6 +76,10 @@ namespace dae
         TunnelComponent* m_Tunnel { };
         GridComponent* m_Grid { };
         SpriteComponent* m_Sprite { };
+
+        // Debug
+        glm::vec2 m_DebugInitialPos { };
+        void TestGraphPathfind();
     };
 
     class PlayerMoveCommand final : public InputCommand
@@ -91,5 +97,22 @@ namespace dae
 
         Player* m_Player { };
         glm::vec2 m_Direction { };
+    };
+
+    class TestGraphCommand final : public InputCommand
+    {
+        public:
+
+        explicit TestGraphCommand(Player* player) :
+            m_Player(player)
+        { };
+
+        ~TestGraphCommand() override = default;
+
+        void Execute() override;
+
+        private:
+
+        Player* m_Player { };
     };
 }

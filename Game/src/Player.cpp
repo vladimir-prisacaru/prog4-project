@@ -30,6 +30,9 @@ namespace dae
         // Snap to current tile center
         auto& transform { GetTransform() };
         transform.SetLocalPos(GetTileCenter(transform.GetLocalPos()));
+
+        // Debug
+        m_DebugInitialPos = transform.GetWorldPos();
     }
 
     void Player::Update(EngineCtx& ctx)
@@ -211,6 +214,10 @@ namespace dae
             input->AddKeyboardCommand(SDL_SCANCODE_LEFT,
                 KeyState::Pressed, std::make_unique<PlayerMoveCommand>(this, glm::vec2 { -1.0f, 0.0f }));
         }
+
+        // Debug
+        input->AddKeyboardCommand(SDL_SCANCODE_F,
+            KeyState::Down, std::make_unique<TestGraphCommand>(this));
     }
 
     void Player::RemoveInput(InputManager* input)
@@ -243,6 +250,9 @@ namespace dae
             input->RemoveKeyboardCommand(SDL_SCANCODE_RIGHT, KeyState::Pressed);
             input->RemoveKeyboardCommand(SDL_SCANCODE_LEFT, KeyState::Pressed);
         }
+
+        // Debug
+        input->RemoveKeyboardCommand(SDL_SCANCODE_F, KeyState::Down);
     }
 
     glm::vec2 Player::GetTileCenter(glm::vec2 pos) const
@@ -322,8 +332,47 @@ namespace dae
         return bestIndex;
     }
 
+    void Player::TestGraphPathfind()
+    {
+        logMsg("F key pressed, logging path:");
+
+        Graph* graph { m_Tunnel->GetNavigationGraph() };
+
+        if (graph == nullptr)
+        {
+            logError("Graph is nullptr!");
+
+            return;
+        }
+
+        auto path { graph->FindPath(GetTransform().GetWorldPos(), m_DebugInitialPos) };
+
+        if (path.nodes.empty())
+        {
+            logMsg("Failed to find path!");
+
+            return;
+        }
+
+        auto printNode =
+            [] (int nodeId, glm::vec2 pos) -> void
+            {
+                logMsg("Path node {}: [{}, {}]", nodeId, pos.x, pos.y);
+            };
+
+        for (int i { }; i < path.nodes.size(); i++)
+        {
+            printNode(i + 1, path.nodes[i]);
+        }
+    }
+
     void PlayerMoveCommand::Execute()
     {
         m_Player->SetMoveDir(m_Direction);
+    }
+
+    void TestGraphCommand::Execute()
+    {
+        m_Player->TestGraphPathfind();
     }
 }

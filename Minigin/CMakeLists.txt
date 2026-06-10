@@ -20,6 +20,12 @@ set(MINIGIN_SOURCES
   src/EventManager.cpp
   src/ServiceLocator.cpp
   src/SoundSystemSDL.cpp
+  src/SpriteComponent.cpp
+  src/GridRenderer.cpp
+  src/Physics.cpp
+  src/BoxCollider.cpp
+  src/GridComponent.cpp
+  src/Graph.cpp
 
   # Dear ImGui (compiled into the engine library)
   ${imgui_SOURCE_DIR}/imgui.cpp
@@ -33,7 +39,7 @@ set(MINIGIN_SOURCES
   # ImPlot (compiled into the engine library)
   ${implot_SOURCE_DIR}/implot.cpp
   ${implot_SOURCE_DIR}/implot_items.cpp
- "src/SpriteComponent.cpp" "src/GridRenderer.cpp" "src/Physics.cpp" "src/BoxCollider.cpp" "src/GridComponent.cpp")
+)
 
 # Suppress warnings on third-party sources we don't control
 set(THIRD_PARTY_SOURCES

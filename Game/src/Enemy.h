@@ -56,7 +56,7 @@ namespace dae
 
         // --- Internal ---
 
-        State m_CurrentState { State::Wander };
+        State m_CurrentState { State::Idle };
 
         // All active players
         std::vector<Player*> m_Players;

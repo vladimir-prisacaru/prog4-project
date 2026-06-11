@@ -56,9 +56,11 @@ namespace dae
 
         // Helper to get the center of a tile
         glm::vec2 GetTileCenter(glm::vec2 pos) const;
+        // Helper to clamp a world-space position to the grid bounds
+        glm::vec2 ClampToGrid(glm::vec2 pos) const;
         // Helper to get constrained direction (only up, down, left and right, no diagonals)
         glm::vec2 GetDir(glm::vec2 inputDir) const;
-        // Helper to get encoded direction (0 = up, 1 = right, 2 = down, 3 = up)
+        // Helper to get encoded direction (0 = up, 1 = right, 2 = down, 3 = left)
         int GetDirInt(glm::vec2 dir);
 
         // Params
@@ -87,7 +89,8 @@ namespace dae
         public:
 
         explicit PlayerMoveCommand(Player* player, glm::vec2 direction) :
-            m_Player(player), m_Direction(direction) { };
+            m_Player(player), m_Direction(direction)
+        { };
 
         ~PlayerMoveCommand() override = default;
 
@@ -96,7 +99,7 @@ namespace dae
         private:
 
         Player* m_Player { };
-        glm::vec2 m_Direction { };
+        glm::vec2  m_Direction { };
     };
 
     class TestGraphCommand final : public InputCommand

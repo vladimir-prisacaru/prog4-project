@@ -213,4 +213,16 @@ namespace dae
 
         return it->second.isFinished;
     }
+
+    bool SpriteComponent::GetCurrentFrame(Frame& result)
+    {
+        if (m_CurrentAnim == m_Anims.end())
+            return false;
+
+        const Animation& anim { m_CurrentAnim->second };
+
+        result = anim.frames[anim.currentFrameId];
+
+        return true;
+    }
 }

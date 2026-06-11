@@ -149,6 +149,133 @@ namespace dae
         return result;
     }
 
+    Path Graph::GetConnectedPath(glm::vec2 startPos, int depth)
+    {
+        if (m_Nodes.empty() || depth < 1)
+            return { };
+
+        // --- Find seed node ---
+        const int seedIdx { FindNode(startPos, std::numeric_limits<float>::max()) };
+
+        if (seedIdx == -1)
+            return { };
+
+        // --- Build adjacency list (full graph, indices stable) ---
+        const int nodeCount { static_cast<int>(m_Nodes.size()) };
+        std::vector<std::vector<int>> adj(nodeCount);
+
+        for (const auto& [a, b] : m_Connections)
+        {
+            adj[a].push_back(b);
+            adj[b].push_back(a);
+        }
+
+        // --- BFS from seed, up to depth hops ---
+        // visited[i] = hop distance from seed, or -1 if not visited
+        std::vector<int> hopDist(nodeCount, -1);
+        std::queue<int> queue;
+
+        hopDist[seedIdx] = 0;
+        queue.push(seedIdx);
+
+        while (!queue.empty())
+        {
+            const int cur { queue.front() };
+            queue.pop();
+
+            if (hopDist[cur] >= depth)
+                continue;
+
+            for (const int nb : adj[cur])
+            {
+                if (hopDist[nb] == -1)
+                {
+                    hopDist[nb] = hopDist[cur] + 1;
+                    queue.push(nb);
+                }
+            }
+        }
+
+        // Collect visited node indices
+        std::vector<int> visited;
+        visited.reserve(nodeCount);
+        for (int i = 0; i < nodeCount; ++i)
+        {
+            if (hopDist[i] != -1)
+                visited.push_back(i);
+        }
+
+        if (visited.size() < 2)
+            return { };
+
+        // Find the pair of visited nodes furthest apart in world space
+        int farA { visited[0] };
+        int farB { visited[1] };
+        float maxDist2 { 0.0f };
+
+        for (int i = 0; i < static_cast<int>(visited.size()); ++i)
+        {
+            for (int j = i + 1; j < static_cast<int>(visited.size()); ++j)
+            {
+                const glm::vec2 delta { m_Nodes[visited[i]] - m_Nodes[visited[j]] };
+                const float dist2 { glm::dot(delta, delta) };
+
+                if (dist2 > maxDist2)
+                {
+                    maxDist2 = dist2;
+                    farA = visited[i];
+                    farB = visited[j];
+                }
+            }
+        }
+
+        // BFS from farA to farB, restricted to the visited set
+        std::vector<bool> inSet(nodeCount, false);
+        for (const int idx : visited)
+            inSet[idx] = true;
+
+        std::vector<int> parent(nodeCount, -1);
+        std::vector<bool> seen(nodeCount, false);
+        std::queue<int> pathQueue;
+
+        seen[farA] = true;
+        pathQueue.push(farA);
+
+        while (!pathQueue.empty())
+        {
+            const int cur { pathQueue.front() };
+            pathQueue.pop();
+
+            if (cur == farB)
+                break;
+
+            for (const int nb : adj[cur])
+            {
+                if (!seen[nb] && inSet[nb])
+                {
+                    seen[nb] = true;
+                    parent[nb] = cur;
+                    pathQueue.push(nb);
+                }
+            }
+        }
+
+        // Reconstruct path farA -> farB
+        Path result { };
+
+        if (!seen[farB])
+            return result;  // No path
+
+        for (int cur = farB; cur != farA; cur = parent[cur])
+            result.nodes.push_back(m_Nodes[cur]);
+
+        result.nodes.push_back(m_Nodes[farA]);
+        std::reverse(result.nodes.begin(), result.nodes.end());
+
+        return result;
+    }
+
+
     int Graph::AddNode(glm::vec2 pos)
     {
         const int existing { FindNode(pos) };

@@ -29,6 +29,9 @@ namespace dae
 
         virtual ~ICollider() = default;
 
+        virtual bool IsEnabled() = 0;
+        virtual void SetEnabled(bool isEnabled) = 0;
+
         virtual RaycastHit Raycast(Ray ray, float maxDist) = 0;
         virtual bool CheckOverlap(ICollider* other, bool& supported) = 0;
     };

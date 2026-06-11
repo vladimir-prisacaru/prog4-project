@@ -54,6 +54,11 @@ namespace dae
         bool IsMirrored() { return m_IsMirrored; }
         void SetMirrored(bool mirrored) { m_IsMirrored = mirrored; }
 
+        float GetScale() { return m_Scale; }
+        void SetScale(float scale) { m_Scale = scale < 0.0f ? 0.0f : scale; }
+
+        bool GetCurrentFrame(Frame& result);
+
         private:
 
         using AnimationMap = std::unordered_map<std::string, Animation>;

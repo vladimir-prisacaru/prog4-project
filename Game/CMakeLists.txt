@@ -9,7 +9,8 @@ set(SOURCES
     src/FPSCounter.cpp
     src/Player.cpp
     src/TunnelComponent.cpp
-)
+    src/Enemy.cpp
+ "src/AttackComponent.cpp")
 
 
 if(EMSCRIPTEN)

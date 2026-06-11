@@ -50,13 +50,32 @@ namespace dae
     }
 
     void Player::OnOverlap(ICollider*)
-    {
-
-    }
+    { }
 
     void Player::OnOverlapEnd(ICollider*)
-    {
+    { }
 
+    glm::vec2 Player::ClampToGrid(glm::vec2 pos) const
+    {
+        if (m_Grid == nullptr)
+            return pos;
+
+        const glm::vec2 gridOrigin { m_Grid->GetTransform().GetWorldPos() };
+        const float tileSize { m_Grid->GetTileSize() };
+        const float halfTile { tileSize * 0.5f };
+
+        const int rows { static_cast<int>(m_Grid->GetTiles().Rows()) };
+        const int cols { static_cast<int>(m_Grid->GetTiles().Cols()) };
+
+        const float minX { gridOrigin.x + halfTile };
+        const float maxX { gridOrigin.x + cols * tileSize - halfTile };
+        const float minY { gridOrigin.y + halfTile };
+        const float maxY { gridOrigin.y + rows * tileSize - halfTile };
+
+        return glm::vec2 {
+            pos.x < minX ? minX : (pos.x > maxX ? maxX : pos.x),
+            pos.y < minY ? minY : (pos.y > maxY ? maxY : pos.y)
+        };
     }
 
     void Player::HandleMovement(float deltaTime)
@@ -101,7 +120,7 @@ namespace dae
         if (const auto dot { glm::dot(inputDir, m_LastDir) };
             dot > 0.9f || dot < -0.9f)
         {
-            const auto newPos { oldPos + displacement };
+            const auto newPos { ClampToGrid(oldPos + displacement) };
 
             transform.SetLocalPos(newPos);
 
@@ -124,12 +143,18 @@ namespace dae
 
         if (!crossedCenter)
         {
-            transform.SetLocalPos(newPos);
+            transform.SetLocalPos(ClampToGrid(newPos));
 
             return;
         }
 
-        transform.SetLocalPos(center + displacement);
+        const float distFromCenter { glm::length(displacement) -
+            glm::distance(oldPos, center) };
+
+        // After a corner, advance in the new direction (inputDir) from the center.
+        // Clamp the resulting position to the grid so the first step of the new
+        // direction also cannot escape.
+        transform.SetLocalPos(ClampToGrid(center + (inputDir * distFromCenter)));
 
         m_LastDir = inputDir;
     }
@@ -185,7 +210,7 @@ namespace dae
         input->AddControllerCommand(m_PlayerId, ControllerButton::DPadLeft,
             KeyState::Pressed, std::make_unique<PlayerMoveCommand>(this, glm::vec2 { -1.0f, 0.0f }));
 
-        // Set up keyborad commands
+        // Set up keyboard commands
         if (m_PlayerId == 0)
         {
             input->AddKeyboardCommand(SDL_SCANCODE_S,
@@ -315,7 +340,7 @@ namespace dae
         const glm::vec2 u { 0.0f, -1.0f };
         const glm::vec2 r { 1.0f,  0.0f };
         const glm::vec2 d { 0.0f,  1.0f };
-        const glm::vec2 l { -1.0f, 0.0f };
+        const glm::vec2 l { -1.0f,  0.0f };
 
         float bestDot = glm::dot(dir, u);
         int bestIndex = 0;
@@ -360,7 +385,7 @@ namespace dae
                 logMsg("Path node {}: [{}, {}]", nodeId, pos.x, pos.y);
             };
 
-        for (int i { }; i < path.nodes.size(); i++)
+        for (int i { }; i < static_cast<int>(path.nodes.size()); i++)
         {
             printNode(i + 1, path.nodes[i]);
         }

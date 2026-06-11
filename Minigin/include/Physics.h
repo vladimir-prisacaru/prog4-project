@@ -35,6 +35,9 @@ namespace dae
 
             for (auto* collider : m_Colliders)
             {
+                if (!collider->IsEnabled())
+                    continue;
+
                 obj = dynamic_cast<T*>(collider);
 
                 if (obj == nullptr)
@@ -66,6 +69,9 @@ namespace dae
 
             for (auto* collider : m_Colliders)
             {
+                if (!collider->IsEnabled())
+                    continue;
+
                 if (dynamic_cast<T*>(collider) == nullptr)
                     continue;
 

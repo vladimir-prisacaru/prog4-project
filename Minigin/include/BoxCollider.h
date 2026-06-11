@@ -23,18 +23,23 @@ namespace dae
         void OnInit(EngineCtx& ctx);
         void OnDestroy(EngineCtx& ctx);
 
+        bool IsEnabled() override { return m_IsEnabled; }
+        void SetEnabled(bool isEnabled) override { m_IsEnabled = isEnabled; }
+
+        RaycastHit Raycast(Ray ray, float maxDist) override;
+        bool CheckOverlap(ICollider* other, bool& supported) override;
+
         glm::vec2 GetCenter() const;
         void SetCenter(glm::vec2 center);
         glm::vec2 GetExtents() const;
         void SetExtents(glm::vec2 extents);
 
-        RaycastHit Raycast(Ray ray, float maxDist) override;
-        bool CheckOverlap(ICollider* other, bool& supported) override;
-
         /* Returns the world-space axis-aligned bounding box */
         AABB GetAABB() const;
 
         private:
+
+        bool m_IsEnabled { true };
 
         glm::vec2 m_Extents { };
         glm::vec2 m_Center { };

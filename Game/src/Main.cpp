@@ -13,6 +13,7 @@
 #include "TunnelComponent.h"
 #include "GridComponent.h"
 #include "GridRenderer.h"
+#include "Enemy.h"
 
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>

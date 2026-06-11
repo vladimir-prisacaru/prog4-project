@@ -23,6 +23,9 @@ namespace dae
         Graph() = default;
         ~Graph() = default;
 
+        bool IsEnabled() override { return true; /* always on */ };
+        void SetEnabled(bool) override { /* do nothing */ };
+
         RaycastHit Raycast(Ray ray, float maxDist) override;
         bool CheckOverlap(ICollider* other, bool& supported) override;
 
@@ -40,6 +43,9 @@ namespace dae
         /* Finds shortest path from startPos to endPos,
            path.nodes does NOT include startPos, but DOES include endPos */
         Path FindPath(glm::vec2 startPos, glm::vec2 endPos);
+        /* Makes the longest path from connected nodes up to a certain depth,
+           that includes the closest node to startPos */
+        Path GetConnectedPath(glm::vec2 startPos, int depth);
 
         const std::vector<glm::vec2>& GetNodes() const { return m_Nodes; }
         const std::vector<std::pair<int, int>>& GetConnections() const { return m_Connections; }

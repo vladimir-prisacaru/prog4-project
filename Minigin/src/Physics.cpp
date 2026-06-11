@@ -41,6 +41,9 @@ namespace dae
 
         for (auto* collider : m_Colliders)
         {
+            if (!collider->IsEnabled())
+                continue;
+
             RaycastHit hit { collider->Raycast(ray, maxDist) };
 
             if (!hit.hit)
@@ -62,6 +65,9 @@ namespace dae
 
         for (auto* collider : m_Colliders)
         {
+            if (!collider->IsEnabled())
+                continue;
+
             RaycastHit hit { collider->Raycast(ray, maxDist) };
 
             if (!hit.hit)
@@ -97,6 +103,9 @@ namespace dae
             {
                 ICollider* a { m_Colliders[i] };
                 ICollider* b { m_Colliders[j] };
+
+                if (!a->IsEnabled() || !b->IsEnabled())
+                    continue;
 
                 {
                     bool supported { };

@@ -147,7 +147,7 @@
 				<spritesheet_path>anim/player.png</spritesheet_path>
 				<animations_path>anim/player.json</animations_path>
 				<draw_order>10</draw_order>
-				<scale>3.0</scale>
+				<scale>4.0</scale>
 			</sprite_component>
 		</components>
 	</object>
@@ -166,7 +166,7 @@
 				<spritesheet_path>anim/enemy.png</spritesheet_path>
 				<animations_path>anim/enemy.json</animations_path>
 				<draw_order>100</draw_order>
-				<scale>3.0</scale>
+				<scale>4.0</scale>
 			</sprite_component>
 		</components>
 	</object>

@@ -65,12 +65,14 @@ namespace dae
         glm::vec2 GetTileCenter(TileCoords coords) const;
         // Returns true if the tile at coords is not solid (passable)
         bool IsTilePassable(TileCoords coords) const;
-        // Ensures a node exists for this tile center and connects it to its
-        // passable orthogonal neighbours. Should be called whenever a tile
-        // transitions from solid to non-solid.
-        void AddTileToGraph(TileCoords coords);
-        // Rebuilds the entire graph from the current grid state.
-        // Called once at the end of OnInit for pre-dug tiles in the scene.
+        // Returns true if the tile's geometry has an open face toward dir
+        bool IsTileOpenToward(int tileId, int dir) const;
+        // Returns true if two orthogonally-adjacent tiles share an open face
+        bool AreTilesConnected(TileCoords coords, TileCoords nb, int dirAtoB) const;
+        // Ensures the node for this tile exists and its graph connections exactly
+        // reflect the tile's current open faces
+        void UpdateTileInGraph(TileCoords coords);
+        // Rebuilds the entire graph from the current grid state
         void RebuildGraph();
 
         // --- Params ---

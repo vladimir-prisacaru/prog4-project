@@ -79,6 +79,33 @@ namespace dae
                     IsTileDugout(m_Grid->GetTileId(oldCoords), dir, dugoutLevel))
                 {
                     m_PlayerDigState[player] = true;
+
+                    const glm::vec2 dirVectors[4] {
+                        {  0.0f, -1.0f }, // DIR_U
+                        {  1.0f,  0.0f }, // DIR_R
+                        {  0.0f,  1.0f }, // DIR_D
+                        { -1.0f,  0.0f }  // DIR_L
+                    };
+
+                    const glm::vec2 digAxis { dirVectors[dir] };
+                    const glm::vec2 tileCenter { GetTileCenter(oldCoords) };
+                    const float tileSize { m_Grid->GetTileSize() };
+                    const glm::vec2 playerPos { player->GetTransform().GetWorldPos() };
+
+                    const float entryFaceProj {
+                        glm::dot(tileCenter, digAxis) - tileSize * 0.5f };
+
+                    const float playerProj { glm::dot(playerPos,  digAxis) };
+
+                    const float progress { (playerProj - entryFaceProj) / tileSize };
+                    const float clamped { progress < 0.0f ? 0.0f : (progress > 1.0f ? 1.0f : progress) };
+
+                    const int newLevel { static_cast<int>(clamped * static_cast<float>(m_DugoutLevels)) };
+                    const int levelClamped { newLevel < m_DugoutLevels ? newLevel : m_DugoutLevels - 1 };
+
+                    // Only update the tile if the level increased
+                    if (levelClamped > dugoutLevel)
+                        m_Grid->SetTileId(oldCoords, GetDugoutTileId(dir, levelClamped));
                 }
                 else
                 {
@@ -153,6 +180,7 @@ namespace dae
             if (dir != outDir && dir != OppositeDir(outDir))
             {
                 m_Grid->SetTileId(coords, GetEdgeTileId(outDir));
+                UpdateTileInGraph(coords);
             }
 
             return;
@@ -167,10 +195,12 @@ namespace dae
                 if (outDir == OppositeDir(dir1))
                 {
                     m_Grid->SetTileId(coords, GetEdgeTileId(dir2));
+                    UpdateTileInGraph(coords);
                 }
                 else if (outDir == OppositeDir(dir2))
                 {
                     m_Grid->SetTileId(coords, GetEdgeTileId(dir1));
+                    UpdateTileInGraph(coords);
                 }
             }
 
@@ -184,6 +214,7 @@ namespace dae
             if (outDir == dir)
             {
                 m_Grid->SetTileId(coords, GetTunnelTileId(dir));
+                UpdateTileInGraph(coords);
 
                 return;
             }
@@ -192,6 +223,7 @@ namespace dae
             if (outDir != OppositeDir(dir))
             {
                 m_Grid->SetTileId(coords, GetCornerTileId(outDir, OppositeDir(dir)));
+                UpdateTileInGraph(coords);
             }
 
             return;
@@ -204,6 +236,7 @@ namespace dae
             if (outDir == OppositeDir(dir))
             {
                 m_Grid->SetTileId(coords, GetEmptyTileId());
+                UpdateTileInGraph(coords);
             }
 
             return;
@@ -217,11 +250,10 @@ namespace dae
         // Going into full
         if (IsTileFull(newTileId))
         {
-            // TODO: CHANGE FROM m_DugoutLevels to 0, when digging is implemented
-            m_Grid->SetTileId(coords, GetDugoutTileId(inDir, m_DugoutLevels - 1));
+            m_Grid->SetTileId(coords, GetDugoutTileId(inDir, 0));
 
-            // Add tile new dug out tile to the graph
-            AddTileToGraph(coords);
+            // Add the new tile to the graph and connect it to its neighbours
+            UpdateTileInGraph(coords);
         }
 
         // Going into tunnel
@@ -231,6 +263,7 @@ namespace dae
             if (dir != inDir && dir != OppositeDir(inDir))
             {
                 m_Grid->SetTileId(coords, GetEdgeTileId(OppositeDir(inDir)));
+                UpdateTileInGraph(coords);
             }
         }
 
@@ -240,6 +273,7 @@ namespace dae
             if (inDir == dir)
             {
                 m_Grid->SetTileId(coords, GetEmptyTileId());
+                UpdateTileInGraph(coords);
             }
         }
 
@@ -252,10 +286,12 @@ namespace dae
                 if (inDir == dir1)
                 {
                     m_Grid->SetTileId(coords, GetEdgeTileId(dir2));
+                    UpdateTileInGraph(coords);
                 }
                 else if (inDir == dir2)
                 {
                     m_Grid->SetTileId(coords, GetEdgeTileId(dir1));
+                    UpdateTileInGraph(coords);
                 }
             }
 
@@ -269,6 +305,7 @@ namespace dae
             if (inDir == OppositeDir(dir))
             {
                 m_Grid->SetTileId(coords, GetTunnelTileId(OppositeDir(dir)));
+                UpdateTileInGraph(coords);
 
                 return;
             }
@@ -277,6 +314,7 @@ namespace dae
             if (inDir != dir)
             {
                 m_Grid->SetTileId(coords, GetCornerTileId(OppositeDir(inDir), OppositeDir(dir)));
+                UpdateTileInGraph(coords);
             }
 
             return;
@@ -503,34 +541,71 @@ namespace dae
         return !IsTileFull(id);
     }
 
-    void TunnelComponent::AddTileToGraph(TileCoords coords)
+    bool TunnelComponent::IsTileOpenToward(int tileId, int dir) const
+    {
+        if (IsTileFull(tileId))
+            return false;
+
+        if (IsTileEmpty(tileId))
+            return true;
+
+        if (int dugDir { }, level { }; IsTileDugout(tileId, dugDir, level))
+            return dir == OppositeDir(dugDir);
+
+        if (int tunnelDir { }; IsTileTunnel(tileId, tunnelDir))
+            return dir == tunnelDir || dir == OppositeDir(tunnelDir);
+
+        if (int edgeDir { }; IsTileEdge(tileId, edgeDir))
+            return dir != OppositeDir(edgeDir);
+
+        if (int dir1 { }, dir2 { }; IsTileCorner(tileId, dir1, dir2))
+            return dir == dir1 || dir == dir2;
+
+        return false; // unrecognised tile
+    }
+
+    bool TunnelComponent::AreTilesConnected(TileCoords coords, TileCoords nb, int dirAtoB) const
+    {
+        const int idA { m_Grid->GetTileId(coords) };
+        const int idB { m_Grid->GetTileId(nb) };
+
+        if (idA == INVALID_TILE_ID || idB == INVALID_TILE_ID)
+            return false;
+
+        return IsTileOpenToward(idA, dirAtoB) && IsTileOpenToward(idB, OppositeDir(dirAtoB));
+    }
+
+    void TunnelComponent::UpdateTileInGraph(TileCoords coords)
     {
         if (m_Graph == nullptr)
             return;
 
         const glm::vec2 center { GetTileCenter(coords) };
+
+        // Ensure a node exists for this tile (needed for newly dug tiles)
         const int nodeIdx { m_Graph->AddNode(center) };
 
-        // Orthogonal neighbours
-        const std::array<TileCoords, 4> neighbours { {
-            { coords.first - 1, coords.second },  // up
-            { coords.first + 1, coords.second },  // down
-            { coords.first,     coords.second - 1 }, // left
-            { coords.first,     coords.second + 1 }  // right
+        // The four orthogonal neighbours with the direction from coords to each
+        const std::array<std::pair<TileCoords, int>, 4> neighbours { {
+            { { coords.first - 1, coords.second     }, DIR_U },
+            { { coords.first,     coords.second + 1 }, DIR_R },
+            { { coords.first + 1, coords.second     }, DIR_D },
+            { { coords.first,     coords.second - 1 }, DIR_L }
         } };
 
-        for (const auto& nb : neighbours)
+        for (const auto& [nb, dir] : neighbours)
         {
-            if (!IsTilePassable(nb))
-                continue;
-
             const glm::vec2 nbCenter { GetTileCenter(nb) };
             const int nbIdx { m_Graph->FindNode(nbCenter) };
 
             if (nbIdx == -1)
-                continue;
+                continue; // neighbour has no node, nothing to connect to or disconnect from
 
-            m_Graph->AddConnection(nodeIdx, nbIdx);
+            // Remove any existing connection first, then re-add only if valid
+            m_Graph->RemoveConnection(nodeIdx, nbIdx);
+
+            if (AreTilesConnected(coords, nb, dir))
+                m_Graph->AddConnection(nodeIdx, nbIdx);
         }
     }
 
@@ -554,7 +629,7 @@ namespace dae
             }
         }
 
-        // Second pass: connect adjacent passable tiles
+        // Second pass: connect adjacent passable tiles that share an open face
         for (int r = 0; r < rows; ++r)
         {
             for (int c = 0; c < cols; ++c)
@@ -569,15 +644,17 @@ namespace dae
                 if (nodeIdx == -1)
                     continue;
 
-                // Only check right and down to avoid adding each edge twice
-                const std::array<TileCoords, 2> neighbours { {
-                    { r + 1, c },
-                    { r,     c + 1 }
+                const std::array<std::pair<TileCoords, int>, 2> neighbours { {
+                    { { r + 1, c     }, DIR_D },
+                    { { r,     c + 1 }, DIR_R }
                 } };
 
-                for (const auto& nb : neighbours)
+                for (const auto& [nb, dir] : neighbours)
                 {
                     if (!IsTilePassable(nb))
+                        continue;
+
+                    if (!AreTilesConnected(coords, nb, dir))
                         continue;
 
                     const int nbIdx { m_Graph->FindNode(GetTileCenter(nb)) };

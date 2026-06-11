@@ -11,6 +11,7 @@ namespace dae
     class SpriteComponent;
     class PlayerMoveCommand;
     class TestGraphCommand;
+    class AttackComponent;
 
     class Player : public Component, public Registrar<Player>, public ICollisionReceiver
     {
@@ -29,6 +30,7 @@ namespace dae
         virtual void OnOverlapEnd(ICollider* other) override;
 
         int GetId() const { return m_PlayerId; }
+        int GetLastDirInt() const { return GetDirInt(m_LastDir); }
 
         private:
 
@@ -61,7 +63,11 @@ namespace dae
         // Helper to get constrained direction (only up, down, left and right, no diagonals)
         glm::vec2 GetDir(glm::vec2 inputDir) const;
         // Helper to get encoded direction (0 = up, 1 = right, 2 = down, 3 = left)
-        int GetDirInt(glm::vec2 dir);
+        int GetDirInt(glm::vec2 dir)  const;
+
+        // --- Lifetime helpers ---
+        void Reset();
+        void Die();
 
         // Params
         int m_PlayerId { };
@@ -78,10 +84,10 @@ namespace dae
         TunnelComponent* m_Tunnel { };
         GridComponent* m_Grid { };
         SpriteComponent* m_Sprite { };
+        AttackComponent* m_Attack { };
 
-        // Debug
-        glm::vec2 m_DebugInitialPos { };
-        void TestGraphPathfind();
+        // Other
+        bool m_IsDead { };
     };
 
     class PlayerMoveCommand final : public InputCommand
@@ -102,20 +108,22 @@ namespace dae
         glm::vec2  m_Direction { };
     };
 
-    class TestGraphCommand final : public InputCommand
+    class PlayerAttackCommand final : public InputCommand
     {
         public:
 
-        explicit TestGraphCommand(Player* player) :
-            m_Player(player)
+        explicit PlayerAttackCommand(AttackComponent* attackComp, Player* player, bool start) :
+            m_AttackComp(attackComp), m_Player(player), m_Start(start)
         { };
 
-        ~TestGraphCommand() override = default;
-
         void Execute() override;
+
+        ~PlayerAttackCommand() override = default;
 
         private:
 
         Player* m_Player { };
+        AttackComponent* m_AttackComp { };
+        bool m_Start { };
     };
 }

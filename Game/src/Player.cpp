@@ -3,6 +3,8 @@
 #include "SceneManager.h"
 #include "TunnelComponent.h"
 #include "SpriteComponent.h"
+#include "AttackComponent.h"
+#include "Enemy.h"
 
 #include <array>
 
@@ -26,18 +28,21 @@ namespace dae
         m_Grid = m_Tunnel->GetComponent<GridComponent>();
         // Get sprite component
         m_Sprite = GetComponent<SpriteComponent>();
+        // Get attack component
+        m_Attack = GetOwner()->GetChildCount() > 0 ?
+            GetOwner()->GetChildById(0)->GetComponent<AttackComponent>() : nullptr;
 
         // Snap to current tile center
         auto& transform { GetTransform() };
         transform.SetLocalPos(GetTileCenter(transform.GetLocalPos()));
-
-        // Debug
-        m_DebugInitialPos = transform.GetWorldPos();
     }
 
     void Player::Update(EngineCtx& ctx)
     {
         if (m_Tunnel == nullptr || m_Grid == nullptr)
+            return;
+
+        if (m_IsDead)
             return;
 
         HandleMovement(ctx.deltaTime);
@@ -49,11 +54,32 @@ namespace dae
         RemoveInput(ctx.inputManager);
     }
 
-    void Player::OnOverlap(ICollider*)
-    { }
+    void Player::OnOverlap(ICollider* other)
+    {
+        // If got hit by another attack
+        if (auto* attack { dynamic_cast<AttackComponent*>(other) };
+            attack != nullptr && attack != m_Attack)
+        {
+            if (attack->CanHitPlayer())
+            {
+                Die();
+
+                return;
+            }
+        }
+
+        if (dynamic_cast<Enemy*>(other) != nullptr)
+        {
+            Die();
+
+            return;
+        }
+    }
 
     void Player::OnOverlapEnd(ICollider*)
-    { }
+    {
+
+    }
 
     glm::vec2 Player::ClampToGrid(glm::vec2 pos) const
     {
@@ -210,6 +236,12 @@ namespace dae
         input->AddControllerCommand(m_PlayerId, ControllerButton::DPadLeft,
             KeyState::Pressed, std::make_unique<PlayerMoveCommand>(this, glm::vec2 { -1.0f, 0.0f }));
 
+        input->AddControllerCommand(m_PlayerId, ControllerButton::ButtonX,
+            KeyState::Down, std::make_unique<PlayerAttackCommand>(m_Attack, this, true));
+
+        input->AddControllerCommand(m_PlayerId, ControllerButton::ButtonX,
+            KeyState::Up, std::make_unique<PlayerAttackCommand>(m_Attack, this, false));
+
         // Set up keyboard commands
         if (m_PlayerId == 0)
         {
@@ -224,6 +256,12 @@ namespace dae
 
             input->AddKeyboardCommand(SDL_SCANCODE_A,
                 KeyState::Pressed, std::make_unique<PlayerMoveCommand>(this, glm::vec2 { -1.0f, 0.0f }));
+
+            input->AddKeyboardCommand(SDL_SCANCODE_F,
+                KeyState::Down, std::make_unique<PlayerAttackCommand>(m_Attack, this, true));
+
+            input->AddKeyboardCommand(SDL_SCANCODE_F,
+                KeyState::Up, std::make_unique<PlayerAttackCommand>(m_Attack, this, false));
         }
         else if (m_PlayerId == 1)
         {
@@ -238,11 +276,13 @@ namespace dae
 
             input->AddKeyboardCommand(SDL_SCANCODE_LEFT,
                 KeyState::Pressed, std::make_unique<PlayerMoveCommand>(this, glm::vec2 { -1.0f, 0.0f }));
-        }
 
-        // Debug
-        input->AddKeyboardCommand(SDL_SCANCODE_F,
-            KeyState::Down, std::make_unique<TestGraphCommand>(this));
+            input->AddKeyboardCommand(SDL_SCANCODE_L,
+                KeyState::Down, std::make_unique<PlayerAttackCommand>(m_Attack, this, true));
+
+            input->AddKeyboardCommand(SDL_SCANCODE_L,
+                KeyState::Up, std::make_unique<PlayerAttackCommand>(m_Attack, this, false));
+        }
     }
 
     void Player::RemoveInput(InputManager* input)
@@ -267,6 +307,9 @@ namespace dae
             input->RemoveKeyboardCommand(SDL_SCANCODE_W, KeyState::Pressed);
             input->RemoveKeyboardCommand(SDL_SCANCODE_D, KeyState::Pressed);
             input->RemoveKeyboardCommand(SDL_SCANCODE_A, KeyState::Pressed);
+
+            input->RemoveKeyboardCommand(SDL_SCANCODE_F, KeyState::Down);
+            input->RemoveKeyboardCommand(SDL_SCANCODE_F, KeyState::Up);
         }
         else if (m_PlayerId == 1)
         {
@@ -274,10 +317,10 @@ namespace dae
             input->RemoveKeyboardCommand(SDL_SCANCODE_UP, KeyState::Pressed);
             input->RemoveKeyboardCommand(SDL_SCANCODE_RIGHT, KeyState::Pressed);
             input->RemoveKeyboardCommand(SDL_SCANCODE_LEFT, KeyState::Pressed);
-        }
 
-        // Debug
-        input->RemoveKeyboardCommand(SDL_SCANCODE_F, KeyState::Down);
+            input->RemoveKeyboardCommand(SDL_SCANCODE_L, KeyState::Down);
+            input->RemoveKeyboardCommand(SDL_SCANCODE_L, KeyState::Up);
+        }
     }
 
     glm::vec2 Player::GetTileCenter(glm::vec2 pos) const
@@ -330,7 +373,7 @@ namespace dae
         return bestDir;
     }
 
-    int Player::GetDirInt(glm::vec2 dir)
+    int Player::GetDirInt(glm::vec2 dir) const
     {
         if (glm::length(dir) < 0.01f)
             return 0;
@@ -357,38 +400,18 @@ namespace dae
         return bestIndex;
     }
 
-    void Player::TestGraphPathfind()
+    void Player::Reset()
     {
-        logMsg("F key pressed, logging path:");
+        // reset state
+    }
 
-        Graph* graph { m_Tunnel->GetNavigationGraph() };
+    void Player::Die()
+    {
+        m_IsDead = true;
 
-        if (graph == nullptr)
-        {
-            logError("Graph is nullptr!");
+        m_Sprite->SetAnimation("die");
 
-            return;
-        }
-
-        auto path { graph->FindPath(GetTransform().GetWorldPos(), m_DebugInitialPos) };
-
-        if (path.nodes.empty())
-        {
-            logMsg("Failed to find path!");
-
-            return;
-        }
-
-        auto printNode =
-            [] (int nodeId, glm::vec2 pos) -> void
-            {
-                logMsg("Path node {}: [{}, {}]", nodeId, pos.x, pos.y);
-            };
-
-        for (int i { }; i < static_cast<int>(path.nodes.size()); i++)
-        {
-            printNode(i + 1, path.nodes[i]);
-        }
+        // send events
     }
 
     void PlayerMoveCommand::Execute()
@@ -396,8 +419,14 @@ namespace dae
         m_Player->SetMoveDir(m_Direction);
     }
 
-    void TestGraphCommand::Execute()
+    void PlayerAttackCommand::Execute()
     {
-        m_Player->TestGraphPathfind();
+        if (m_AttackComp == nullptr || m_Player == nullptr)
+            return;
+
+        if (m_Start)
+            m_AttackComp->StartAttacking(m_Player->GetLastDirInt(), false);
+        else
+            m_AttackComp->StopAttacking();
     }
 }

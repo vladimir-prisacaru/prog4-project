@@ -2,6 +2,8 @@
 #include "SpriteComponent.h"
 #include "BoxCollider.h"
 
+#include <array>
+
 namespace dae
 {
     void AttackComponent::Register()
@@ -9,6 +11,7 @@ namespace dae
         RegisterComponent<AttackComponent>("attack_component");
 
         RegisterParameter("is_friendly", &AttackComponent::m_IsFriendly);
+        RegisterParameter("can_hit_player", &AttackComponent::m_CanHitPlayer);
     }
 
     void AttackComponent::OnInit(EngineCtx& ctx)
@@ -31,10 +34,9 @@ namespace dae
         if (!m_IsAttacking)
             return;
 
-        if (m_Sprite->IsAnimationFinished("attack"))
+        if (m_AutoStops && m_Sprite->IsAnimationFinished("attack"))
         {
-            if (m_AutoStops)
-                StopAttacking();
+            StopAttacking();
 
             return;
         }
@@ -68,16 +70,25 @@ namespace dae
         m_BoxCollider->SetExtents(extents);
     }
 
-    void AttackComponent::Attack()
+    void AttackComponent::StartAttacking(int dir, bool autoStop)
     {
         if (m_Sprite == nullptr || m_BoxCollider == nullptr)
             return;
+
+        if (dir < 0 || dir > 3)
+            return;
+
+        static const std::array<std::string, 4> attackNames {
+            "attack_up", "attack_right", "attack_down", "attack_left"
+        };
 
         if (m_IsAttacking)
             return;
 
         m_BoxCollider->SetEnabled(true);
-        m_Sprite->SetAnimation("attack");
+        m_CurrentAnimName = attackNames[dir];
+        m_Sprite->SetAnimation(m_CurrentAnimName);
+        m_AutoStops = autoStop;
     }
 
     void AttackComponent::StopAttacking()

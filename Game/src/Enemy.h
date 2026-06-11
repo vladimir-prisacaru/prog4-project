@@ -7,6 +7,7 @@
 namespace dae
 {
     class Player;
+    class SpriteComponent;
 
     class Enemy final : public Component, public Registrar<Enemy>, public ICollisionReceiver
     {
@@ -40,6 +41,11 @@ namespace dae
 
         // --- Movement helpers ---
         void HandleMovement(float deltaTime);
+        // --- Animation helpers ---
+        void HandleAnimations();
+
+        // Returns the cardinal direction index (0=up,1=right,2=down,3=left) from a direction vector
+        int GetDirInt(glm::vec2 dir) const;
 
         // --- Params ---
 
@@ -56,7 +62,7 @@ namespace dae
         std::vector<Player*> m_Players;
         // Currently targeted player
         Player* m_TargetPlayer { };
-        // Active tunel component
+        // Active tunnel component
         TunnelComponent* m_Tunnel { };
         // Graph of the tunnel component
         Graph* m_Graph { };
@@ -70,5 +76,11 @@ namespace dae
         bool m_IsWanderingReversed { };
         // Acc time since last pathfind
         float m_PathfindTimer { };
+
+        // Last movement direction (used for animations)
+        glm::vec2 m_LastDir { 1.0f, 0.0f };
+
+        // Cached sprite component
+        SpriteComponent* m_Sprite { };
     };
 }

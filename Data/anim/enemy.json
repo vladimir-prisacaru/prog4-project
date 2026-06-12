@@ -150,7 +150,7 @@
         ]
     },
 	"die": {
-        "isLooping": true,
+        "isLooping": false,
         "frames": [
 			{
                 "top": 16, "left": 0, "width": 16, "height": 16,
@@ -173,9 +173,9 @@
                 "pivot": { "x": 0.5, "y": 0.5 }
             }
         ]
-    }
+    },
 	"undie": {
-        "isLooping": true,
+        "isLooping": false,
         "frames": [
             {
                 "top": 18, "left": 54, "width": 20, "height": 21,

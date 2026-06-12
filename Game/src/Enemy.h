@@ -68,6 +68,8 @@ namespace dae
         float m_AttackAngleThreshold { };
         // Max attack range
         float m_AttackRange { };
+        // Time in seconds the enemy must wait between attacks
+        float m_AttackCooldown { };
 
         // --- Internal ---
 
@@ -91,6 +93,8 @@ namespace dae
         bool m_IsWanderingReversed { };
         // Acc time since last pathfind
         float m_PathfindTimer { };
+        // Acc time since last attack (starts at cooldown so first attack can fire immediately)
+        float m_AttackCooldownTimer { };
         // Used to check if the enemy is currently being attacked
         AttackComponent* m_CurrentAttacker { };
 
@@ -102,5 +106,6 @@ namespace dae
         AttackComponent* m_Attack { };
         Scene* m_Scene { };
         EventManager* m_EventManager { };
+        Physics* m_Physics { };
     };
 }

@@ -26,8 +26,6 @@ namespace dae
         m_InputManager = ctx.inputManager;
         m_EventManager = ctx.eventManager;
 
-        SetupInput(ctx.inputManager);
-
         // Get the tunnel component
         m_Tunnel = ctx.sceneManager->GetFirstComponentByType<TunnelComponent>();
         // Get the grid component
@@ -39,6 +37,8 @@ namespace dae
             GetOwner()->GetChildById(0)->GetComponent<AttackComponent>() : nullptr;
         // Get box collider
         m_BoxCollider = GetComponent<BoxCollider>();
+
+        SetupInput(ctx.inputManager);
 
         // Snap to current tile center and record as initial position
         auto& transform { GetTransform() };
@@ -79,7 +79,7 @@ namespace dae
             if (auto* attack { comp->GetComponent<AttackComponent>() };
                 attack != nullptr && attack != m_Attack)
             {
-                if (attack->CanHitPlayer())
+                if (!attack->IsFriendly() && attack->CanHitPlayer())
                 {
                     Die();
 

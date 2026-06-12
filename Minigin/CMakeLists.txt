@@ -39,7 +39,7 @@ set(MINIGIN_SOURCES
   # ImPlot (compiled into the engine library)
   ${implot_SOURCE_DIR}/implot.cpp
   ${implot_SOURCE_DIR}/implot_items.cpp
-)
+ "src/GridCollider.cpp")
 
 # Suppress warnings on third-party sources we don't control
 set(THIRD_PARTY_SOURCES

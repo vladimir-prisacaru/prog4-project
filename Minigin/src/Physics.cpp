@@ -27,6 +27,28 @@ namespace dae
         }
 
         m_Colliders.erase(it);
+
+        // Fire OnOverlapEnd for every active pair that involves this collider,
+        // then remove those pairs so Update() never touches the now-dangling pointer.
+        for (auto pairIt { m_ActiveOverlaps.begin() }; pairIt != m_ActiveOverlaps.end();)
+        {
+            if (pairIt->first != collider && pairIt->second != collider)
+            {
+                ++pairIt;
+                continue;
+            }
+
+            ICollider* other { pairIt->first == collider ? pairIt->second : pairIt->first };
+
+            // Notify the surviving side that the overlap ended
+            if (auto* componentOther { dynamic_cast<Component*>(other) })
+            {
+                if (auto* receiver { componentOther->GetComponentOfType<ICollisionReceiver>() })
+                    receiver->OnOverlapEnd(collider);
+            }
+
+            pairIt = m_ActiveOverlaps.erase(pairIt);
+        }
     }
 
 
@@ -150,13 +172,13 @@ namespace dae
             if (auto* componentA { dynamic_cast<Component*>(pair.first) })
             {
                 if (auto* receiverA { componentA->GetComponentOfType<ICollisionReceiver>() })
-                    receiverA->OnOverlap(pair.second);
+                    receiverA->OnOverlapEnd(pair.second);
             }
 
             if (auto* componentB { dynamic_cast<Component*>(pair.second) })
             {
                 if (auto* receiverB { componentB->GetComponentOfType<ICollisionReceiver>() })
-                    receiverB->OnOverlap(pair.first);
+                    receiverB->OnOverlapEnd(pair.first);
             }
         }
 

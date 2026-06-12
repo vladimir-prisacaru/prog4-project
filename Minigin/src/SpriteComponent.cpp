@@ -26,7 +26,7 @@ namespace dae
         ctx.renderer->AddRenderable(this);
 
         // Import spritesheet texture
-        m_Spritesheet = ctx.resourceManager->LoadTexture(m_SpritesheetPath);
+        m_Spritesheet = ctx.resourceManager->LoadTexture(m_SpritesheetPath, true);
 
         // Parse animations
         auto fullPath { ctx.dataPath / m_AnimationsPath };

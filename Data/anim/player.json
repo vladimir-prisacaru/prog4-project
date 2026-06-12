@@ -168,5 +168,30 @@
                 "pivot": { "x": 0.5, "y": 0.5 }
             }
         ]
+    },
+	"die": {
+        "isLooping": false,
+        "frames": [
+            {
+                "top": 32, "left": 48, "width": 16, "height": 16,
+				"frameTime": 0.2,
+                "pivot": { "x": 0.5, "y": 0.5 }
+            },
+			{
+                "top": 32, "left": 64, "width": 16, "height": 16,
+				"frameTime": 0.2,
+                "pivot": { "x": 0.5, "y": 0.5 }
+            },
+			{
+                "top": 32, "left": 80, "width": 16, "height": 16,
+				"frameTime": 0.2,
+                "pivot": { "x": 0.5, "y": 0.5 }
+            },
+			{
+                "top": 32, "left": 96, "width": 16, "height": 16,
+				"frameTime": 0.2,
+                "pivot": { "x": 0.5, "y": 0.5 }
+            }
+        ]
     }
 }

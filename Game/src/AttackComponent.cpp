@@ -34,7 +34,7 @@ namespace dae
         if (!m_IsAttacking)
             return;
 
-        if (m_AutoStops && m_Sprite->IsAnimationFinished("attack"))
+        if (m_AutoStops && m_Sprite->IsAnimationFinished(m_CurrentAnimName))
         {
             StopAttacking();
 
@@ -104,6 +104,6 @@ namespace dae
 
     bool AttackComponent::IsFinished() const
     {
-        return m_Sprite->IsAnimationFinished("attack");
+        return m_Sprite->IsAnimationFinished(m_CurrentAnimName);
     }
 }

@@ -1,9 +1,9 @@
 {
-    "default": {
+    "idle": {
         "isLooping": true,
         "frames": [
             {
-                "top": 0, "left": 0, "width": 16, "height": 16,
+                "top": 0, "left": 0, "width": 1, "height": 1,
                 "frameTime": 0.5,
                 "pivot": { "x": 0.5, "y": 0.5 }
             }
@@ -48,5 +48,5 @@
                 "pivot": { "x": 1.0, "y": 0.5 }
             }
         ]
-    },
+    }
 }

@@ -5,6 +5,8 @@
 #include "AttackComponent.h"
 #include "EventManager.h"
 #include "DirHelpers.h"
+#include "Physics.h"
+#include "GridCollider.h"
 
 #include <array>
 
@@ -19,12 +21,14 @@ namespace dae
         RegisterParameter("attack_dirs", &Enemy::m_AttackDirs);
         RegisterParameter("attack_angle_threshold", &Enemy::m_AttackAngleThreshold);
         RegisterParameter("attack_range", &Enemy::m_AttackRange);
+        RegisterParameter("attack_cooldown", &Enemy::m_AttackCooldown);
     }
 
     void Enemy::OnInit(EngineCtx& ctx)
     {
         m_Scene = ctx.scene;
         m_EventManager = ctx.eventManager;
+        m_Physics = ctx.physics;
 
         // Get all players
         m_Players = ctx.sceneManager->GetAllComponentsByType<Player>();
@@ -42,6 +46,9 @@ namespace dae
 
         // Fire pathfinding on the very first update
         m_PathfindTimer = m_PathfindFrequency;
+
+        // Allow attacking immediately
+        m_AttackCooldownTimer = m_AttackCooldown;
     }
 
     void Enemy::Update(EngineCtx& ctx)
@@ -67,6 +74,7 @@ namespace dae
             m_CurrentState == State::Seek)
         {
             m_PathfindTimer += ctx.deltaTime;
+            m_AttackCooldownTimer += ctx.deltaTime;
 
             const bool timerFired { m_PathfindTimer >= m_PathfindFrequency };
             const bool targetChanged { m_TargetPlayer != closestPlayer };
@@ -467,6 +475,9 @@ namespace dae
         if (m_TargetPlayer == nullptr || m_Attack == nullptr)
             return false;
 
+        if (m_AttackCooldownTimer < m_AttackCooldown)
+            return false;
+
         const glm::vec2 pos { GetTransform().GetWorldPos() };
         const glm::vec2 playerPos { m_TargetPlayer->GetTransform().GetWorldPos() };
 
@@ -484,12 +495,24 @@ namespace dae
         {
             const float dot = glm::dot(glm::normalize(dir), toPlayer);
 
-            if (dot >= minDot)
-            {
-                m_Attack->StartAttacking(GetDirInt(dir));
+            if (dot < minDot)
+                continue;
 
-                return true;
+            // Check line of sight: the ray must not hit a solid grid tile
+            // before reaching the player. A hit within attack range means blocked.
+            if (m_Physics != nullptr)
+            {
+                const Ray ray { pos, toPlayer };
+                const RaycastHit hit { m_Physics->Raycast<GridCollider>(ray, distToPlayer) };
+
+                if (hit.hit)
+                    continue;
             }
+
+            m_Attack->StartAttacking(GetDirInt(dir));
+            m_AttackCooldownTimer = 0.0f;
+
+            return true;
         }
 
         return false;

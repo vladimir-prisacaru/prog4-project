@@ -86,6 +86,8 @@ namespace dae
         SpriteComponent* m_Sprite { };
         AttackComponent* m_Attack { };
 
+        EventManager* m_EventManager { };
+
         // Other
         bool m_IsDead { };
     };

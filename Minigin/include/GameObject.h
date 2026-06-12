@@ -338,6 +338,13 @@ namespace dae
         /* Same as GetOwner()->GetTransform() */
         Transform& GetTransform() const;
 
+        /* Same as GetOwner()->HasComponent<T>() */
+        template<ComponentType T>
+        bool HasComponent() const
+        {
+            return m_Owner->HasComponent<T>();
+        }
+
         /* Same as GetOwner()->GetComponent<T>() */
         template<ComponentType T>
         T* GetComponent() const

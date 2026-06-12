@@ -5,6 +5,7 @@
 #include "SpriteComponent.h"
 #include "AttackComponent.h"
 #include "Enemy.h"
+#include "EventManager.h"
 
 #include <array>
 
@@ -57,22 +58,26 @@ namespace dae
     void Player::OnOverlap(ICollider* other)
     {
         // If got hit by another attack
-        if (auto* attack { dynamic_cast<AttackComponent*>(other) };
-            attack != nullptr && attack != m_Attack)
+        if (auto* comp { dynamic_cast<Component*>(other) };
+            comp != nullptr)
         {
-            if (attack->CanHitPlayer())
+            if (auto* attack { comp->GetComponent<AttackComponent>() };
+                attack != nullptr && attack != m_Attack)
+            {
+                if (attack->CanHitPlayer())
+                {
+                    Die();
+
+                    return;
+                }
+            }
+
+            if (comp->HasComponent<Enemy>())
             {
                 Die();
 
                 return;
             }
-        }
-
-        if (dynamic_cast<Enemy*>(other) != nullptr)
-        {
-            Die();
-
-            return;
         }
     }
 
@@ -411,7 +416,7 @@ namespace dae
 
         m_Sprite->SetAnimation("die");
 
-        // send events
+        m_EventManager->QueueEvent(Event { GameEvent::PlayerDied, m_PlayerId });
     }
 
     void PlayerMoveCommand::Execute()

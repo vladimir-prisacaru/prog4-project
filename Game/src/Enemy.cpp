@@ -2,6 +2,8 @@
 #include "Player.h"
 #include "SceneManager.h"
 #include "SpriteComponent.h"
+#include "AttackComponent.h"
+#include "EventManager.h"
 
 #include <array>
 
@@ -13,10 +15,16 @@ namespace dae
 
         RegisterParameter("pathfind_frequency", &Enemy::m_PathfindFrequency);
         RegisterParameter("move_speed", &Enemy::m_MoveSpeed);
+        RegisterParameter("attack_dirs", &Enemy::m_AttackDirs);
+        RegisterParameter("attack_angle_threshold", &Enemy::m_AttackAngleThreshold);
+        RegisterParameter("attack_range", &Enemy::m_AttackRange);
     }
 
     void Enemy::OnInit(EngineCtx& ctx)
     {
+        m_Scene = ctx.scene;
+        m_EventManager = ctx.eventManager;
+
         // Get all players
         m_Players = ctx.sceneManager->GetAllComponentsByType<Player>();
 
@@ -24,8 +32,12 @@ namespace dae
         m_Tunnel = ctx.sceneManager->GetFirstComponentByType<TunnelComponent>();
         m_Graph = m_Tunnel->GetNavigationGraph();
 
-        // Get sprite component (optional – enemy may not have one)
+        // Get sprite component (optional)
         m_Sprite = GetComponent<SpriteComponent>();
+
+        // Get attack component (optional)
+        m_Attack = GetOwner()->GetChildCount() > 0 ?
+            GetOwner()->GetChildById(0)->GetComponent<AttackComponent>() : nullptr;
 
         // Fire pathfinding on the very first update
         m_PathfindTimer = m_PathfindFrequency;
@@ -33,7 +45,7 @@ namespace dae
 
     void Enemy::Update(EngineCtx& ctx)
     {
-        // --- Find closest player ---
+        // Find closest player
         Player* closestPlayer { };
         float closestDist { std::numeric_limits<float>::max() };
 
@@ -82,37 +94,66 @@ namespace dae
             }
         }
 
+        if (m_CurrentState != State::Attack)
+        {
+            if (TryAttack())
+                m_CurrentState == State::Attack;
+        }
+
         HandleMovement(ctx.deltaTime);
+        HandleAttack();
+        HandleDeath();
         HandleAnimations();
     }
 
     void Enemy::OnDestroy(EngineCtx&)
     { }
 
-    void Enemy::OnOverlap(ICollider*)
-    { }
+    void Enemy::OnOverlap(ICollider* other)
+    {
+        if (m_CurrentState == State::Dying || m_CurrentState == State::Dead)
+            return;
 
-    void Enemy::OnOverlapEnd(ICollider*)
-    { }
+        if (m_CurrentAttacker != nullptr)
+            return;
 
-    // ---------------------------------------------------------------------------
-    // Trim the leading nodes of `path` that the enemy has already passed or that
-    // represent a useless detour:
-    //
-    //   If startPos → node[0] → node[1] is longer than startPos → node[1]
-    //   AND the three points are collinear (enemy, node[0] and node[1] all lie on
-    //   the same axis-aligned line, i.e. no corner between them) then node[0] is
-    //   simply behind or beside the enemy on a straight corridor — drop it.
-    //
-    // This prevents the back-and-forth caused by the graph injecting the closest
-    // tile center as node[0] when the enemy has already moved past it.
-    // The collinearity check ensures we never skip a node that is actually around
-    // a corner (which would make the enemy cut through walls).
-    // ---------------------------------------------------------------------------
+        if (auto* comp { dynamic_cast<Component*>(other) };
+            comp != nullptr)
+        {
+            if (auto* attack { comp->GetComponent<AttackComponent>() };
+                attack != nullptr)
+            {
+                // If attack is from the player
+                if (attack->IsFriendly())
+                {
+                    m_CurrentAttacker = attack;
+
+                    m_CurrentState = State::Dying;
+
+                    return;
+                }
+            }
+        }
+    }
+
+    void Enemy::OnOverlapEnd(ICollider* other)
+    {
+        if (auto* comp { dynamic_cast<Component*>(other) };
+            comp != nullptr)
+        {
+            if (auto* attack { comp->GetComponent<AttackComponent>() };
+                attack != nullptr)
+            {
+                if (attack == m_CurrentAttacker)
+                    m_CurrentAttacker = nullptr;
+            }
+        }
+    }
+
+    // Drops redundant path nodes
     static void TrimRedundantLeadingNodes(Path& path, glm::vec2 startPos)
     {
         // Collinearity threshold: cross-product magnitude must be below this
-        // (in world-space pixels²) to count as "on the same line".
         constexpr float kCollinearEps { 0.5f };
 
         while (path.nodes.size() >= 2)
@@ -120,23 +161,21 @@ namespace dae
             const glm::vec2 n0 { path.nodes[0] };
             const glm::vec2 n1 { path.nodes[1] };
 
-            // Check collinearity of (startPos, n0, n1) via 2-D cross product
-            // of (n0 - startPos) and (n1 - startPos).
+            // Check collinearity of (startPos, n0, n1) via 2D cross product
             const glm::vec2 v0 { n0 - startPos };
             const glm::vec2 v1 { n1 - startPos };
             const float cross { v0.x * v1.y - v0.y * v1.x };
 
             if (std::abs(cross) > kCollinearEps)
-                break; // corner involved – keep node[0]
+                break; // corner, keep node[0]
 
-            // Check that skipping node[0] is actually shorter.
+            // Check that skipping node[0] is actually shorter
             const float dist01 { glm::length(n0 - startPos) + glm::length(n1 - n0) };
             const float distDirect { glm::length(n1 - startPos) };
 
             if (distDirect >= dist01 - kCollinearEps)
-                break; // not shorter (or equal) – keep node[0]
+                break; // not shorter, keep node[0]
 
-            // node[0] is behind/beside us on a straight line: drop it.
             path.nodes.erase(path.nodes.begin());
         }
     }
@@ -171,10 +210,7 @@ namespace dae
 
         Path path { m_Graph->GetConnectedPath(GetTransform().GetWorldPos(), searchDepth) };
 
-        if (path.nodes.empty())
-            return false;
-
-        // Guard: need at least 2 nodes to bounce back and forth.
+        // Guard: need at least 2 nodes to bounce back and forth
         if (path.nodes.size() < 2)
             return false;
 
@@ -213,13 +249,12 @@ namespace dae
         const glm::vec2 oldPos { transform.GetWorldPos() };
         const glm::vec2 nodePos { m_CurrentPath.nodes[m_NextPathNodeId] };
 
-        // --- NaN-proof direction ---
         const glm::vec2 toNode { nodePos - oldPos };
         const float toNodeLen { glm::length(toNode) };
 
         if (toNodeLen < 1e-4f)
         {
-            // Already at this node: snap and fall through to index update.
+            // Already at this node: snap and fall through to index update
             transform.SetLocalPos(nodePos);
         }
         else
@@ -243,20 +278,20 @@ namespace dae
                 return;
             }
 
-            // Snap to the node we just crossed.
+            // Snap to the node we just crossed
             transform.SetLocalPos(nodePos);
         }
 
         // ---- Advance node index ----
         if (m_CurrentState == State::Wander)
         {
-            // Still on the bridge path that leads to the start of the wander route.
+            // Still on the bridge path that leads to the start of the wander route
             if (!m_CachedWanderPath.nodes.empty())
             {
                 if (const int nextId { m_NextPathNodeId + 1 };
                     nextId >= static_cast<int>(m_CurrentPath.nodes.size()))
                 {
-                    // Reached the end of the bridge – activate the wander route.
+                    // Reached the end of the bridge – activate the wander route
                     m_CurrentPath = std::move(m_CachedWanderPath);
                     m_CachedWanderPath = Path { };
                     m_NextPathNodeId = 0;
@@ -266,14 +301,14 @@ namespace dae
                     m_NextPathNodeId++;
                 }
             }
-            // Actively wandering along the wander route.
+            // Actively wandering along the wander route
             else
             {
                 if (m_IsWanderingReversed)
                 {
                     if (const int nextId { m_NextPathNodeId - 1 }; nextId < 0)
                     {
-                        // Bounced back to the start: go forward again from node 1.
+                        // Bounced back to the start: go forward again from node 1
                         m_NextPathNodeId = 1;
                         m_IsWanderingReversed = false;
                     }
@@ -287,7 +322,7 @@ namespace dae
                     if (const int nextId { m_NextPathNodeId + 1 };
                         nextId >= static_cast<int>(m_CurrentPath.nodes.size()))
                     {
-                        // Reached the far end: start reversing from the second-to-last node.
+                        // Reached the far end: start reversing from the second-to-last node
                         m_NextPathNodeId = static_cast<int>(m_CurrentPath.nodes.size()) - 2;
                         m_IsWanderingReversed = true;
                     }
@@ -303,9 +338,9 @@ namespace dae
             if (const int nextId { m_NextPathNodeId + 1 };
                 nextId >= static_cast<int>(m_CurrentPath.nodes.size()))
             {
-                // Reached the end of the seek path.
+                // Reached the end of the seek path
                 // Clear the path and transition to Idle so the enemy doesn't
-                // freeze waiting for the re-pathfind timer.
+                // freeze waiting for the re-pathfind timer
                 m_CurrentPath = Path { };
                 m_NextPathNodeId = 0;
                 m_CurrentState = State::Idle;
@@ -315,6 +350,15 @@ namespace dae
                 m_NextPathNodeId++;
             }
         }
+    }
+
+    void Enemy::HandleAttack()
+    {
+        if (m_CurrentState != State::Attack)
+            return;
+
+        if (m_Sprite->IsAnimationFinished("attack"))
+            m_CurrentState = State::Idle;
     }
 
     void Enemy::HandleAnimations()
@@ -330,6 +374,10 @@ namespace dae
             "move_up", "move_right", "move_down", "move_left"
         };
 
+        static const std::array<std::string, 4> attackNames {
+            "attack_up", "attack_right", "attack_down", "attack_left"
+        };
+
         const int dirIdx { GetDirInt(m_LastDir) };
 
         switch (m_CurrentState)
@@ -342,8 +390,89 @@ namespace dae
                 m_Sprite->SetAnimationIfChanged(moveNames[dirIdx]);
                 break;
             case State::Attack:
-                // No attack animation yet; hold the last move frame.
+                m_Sprite->SetAnimationIfChanged(attackNames[dirIdx]);
                 break;
+            case State::Dying:
+                m_Sprite->SetAnimationIfChanged("die");
+                break;
+            case State::Undying:
+                m_Sprite->SetAnimationIfChanged("undie");
+                break;
+        }
+    }
+
+    void Enemy::HandleUndeath()
+    {
+        if (m_CurrentState != State::Undying)
+            return;
+
+        if (m_Sprite->IsAnimationFinished("undie"))
+            m_CurrentState = State::Idle;
+    }
+
+    void Enemy::HandleDeath()
+    {
+        if (m_CurrentState != State::Dying)
+            return;
+
+        if (m_CurrentAttacker == nullptr)
+        {
+            m_CurrentState = State::Undying;
+
+            return;
+        }
+
+        if (m_Sprite->IsAnimationFinished("die"))
+            Die();
+    }
+
+    void Enemy::Die()
+    {
+        // handle death
+
+        m_Scene->Destroy(GetOwner());
+
+        int playerId { -1 };
+
+        if (m_CurrentAttacker != nullptr)
+        {
+            auto* parent { m_CurrentAttacker->GetOwner()->GetParent() };
+
+            if (auto* player { parent->GetComponent<Player>() })
+                playerId = player->GetId();
+        }
+
+        m_EventManager->QueueEvent(Event { GameEvent::EnemyDied, playerId });
+    }
+
+    bool Enemy::TryAttack()
+    {
+        if (m_TargetPlayer == nullptr || m_Attack == nullptr)
+            return false;
+
+        const glm::vec2 pos { GetTransform().GetWorldPos() };
+        const glm::vec2 playerPos { m_TargetPlayer->GetTransform().GetWorldPos() };
+
+        const float distToPlayer { glm::length(playerPos - pos) };
+
+        if (distToPlayer < 1e-5f || distToPlayer > m_AttackRange)
+            return false;
+
+        const glm::vec2 toPlayer { glm::normalize(playerPos - pos) };
+
+        const float minDot { std::cos(glm::radians(m_AttackAngleThreshold)) };
+
+        // If aligned
+        for (auto& dir : m_AttackDirs)
+        {
+            const float dot = glm::dot(glm::normalize(dir), toPlayer);
+
+            if (dot >= minDot)
+            {
+                m_Attack->StartAttacking(GetDirInt(dir));
+
+                return true;
+            }
         }
     }
 
@@ -360,7 +489,7 @@ namespace dae
         const glm::vec2 l { -1.0f,  0.0f };
 
         float bestDot { glm::dot(dir, u) };
-        int   bestIdx { 0 };
+        int bestIdx { 0 };
 
         const float dotR { glm::dot(dir, r) };
         if (dotR > bestDot) { bestDot = dotR; bestIdx = 1; }

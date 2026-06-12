@@ -8,6 +8,7 @@ namespace dae
 {
     class Player;
     class SpriteComponent;
+    class AttackComponent;
 
     class Enemy final : public Component, public Registrar<Enemy>, public ICollisionReceiver
     {
@@ -32,17 +33,27 @@ namespace dae
             Idle,
             Wander,
             Seek,
-            Attack
+            Attack,
+            Dying,
+            Undying
         };
 
         // --- Path helpers ---
         bool PathfindToPlayer();
         bool FindWanderPath();
 
-        // --- Movement helpers ---
+        // --- State ---
         void HandleMovement(float deltaTime);
-        // --- Animation helpers ---
+        void HandleAttack();
         void HandleAnimations();
+        void HandleUndeath();
+        void HandleDeath();
+
+        // --- Lifetime helpers ---
+        void Die();
+
+        // Checks if attacking is possible
+        bool TryAttack();
 
         // Returns the cardinal direction index (0=up,1=right,2=down,3=left) from a direction vector
         int GetDirInt(glm::vec2 dir) const;
@@ -53,6 +64,12 @@ namespace dae
         float m_PathfindFrequency { };
         // How fast does the enemy move
         float m_MoveSpeed { };
+        // Supported attack directions within threshold
+        std::vector<glm::vec2> m_AttackDirs { };
+        // Supported attack angle threshold
+        float m_AttackAngleThreshold { };
+        // Max attack range
+        float m_AttackRange { };
 
         // --- Internal ---
 
@@ -76,11 +93,16 @@ namespace dae
         bool m_IsWanderingReversed { };
         // Acc time since last pathfind
         float m_PathfindTimer { };
+        // Used to check if the enemy is currently being attacked
+        AttackComponent* m_CurrentAttacker { };
 
         // Last movement direction (used for animations)
         glm::vec2 m_LastDir { 1.0f, 0.0f };
 
-        // Cached sprite component
+        // Cached
         SpriteComponent* m_Sprite { };
+        AttackComponent* m_Attack { };
+        Scene* m_Scene { };
+        EventManager* m_EventManager { };
     };
 }

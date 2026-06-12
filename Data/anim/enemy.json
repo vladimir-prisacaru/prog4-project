@@ -13,7 +13,7 @@
         "isLooping": true,
         "frames": [
             {
-                "top": 0, "left": 16, "width": 16, "height": 16,
+                "top": 0, "left": 0, "width": 16, "height": 16,
                 "frameTime": 0.5,
                 "pivot": { "x": 0.5, "y": 0.5 }
             }
@@ -23,7 +23,7 @@
         "isLooping": true,
         "frames": [
             {
-                "top": 0, "left": 48, "width": 16, "height": 16,
+                "top": 0, "left": 0, "width": 16, "height": 16,
                 "frameTime": 0.5,
                 "pivot": { "x": 0.5, "y": 0.5 }
             }
@@ -33,7 +33,7 @@
         "isLooping": true,
         "frames": [
             {
-                "top": 0, "left": 80, "width": 16, "height": 16,
+                "top": 0, "left": 32, "width": 16, "height": 16,
                 "frameTime": 0.5,
                 "pivot": { "x": 0.5, "y": 0.5 }
             }
@@ -43,7 +43,7 @@
         "isLooping": true,
         "frames": [
             {
-                "top": 0, "left": 112, "width": 16, "height": 16,
+                "top": 0, "left": 32, "width": 16, "height": 16,
                 "frameTime": 0.5,
                 "pivot": { "x": 0.5, "y": 0.5 }
             }
@@ -68,6 +68,21 @@
         "isLooping": true,
         "frames": [
             {
+                "top": 0, "left": 0, "width": 16, "height": 16,
+                "frameTime": 0.1,
+                "pivot": { "x": 0.5, "y": 0.5 }
+            },
+            {
+                "top": 0, "left": 16, "width": 16, "height": 16,
+                "frameTime": 0.1,
+                "pivot": { "x": 0.5, "y": 0.5 }
+            }
+        ]
+    },
+    "move_down": {
+        "isLooping": true,
+        "frames": [
+            {
                 "top": 0, "left": 32, "width": 16, "height": 16,
                 "frameTime": 0.1,
                 "pivot": { "x": 0.5, "y": 0.5 }
@@ -79,31 +94,101 @@
             }
         ]
     },
-    "move_down": {
+    "move_left": {
         "isLooping": true,
         "frames": [
             {
-                "top": 0, "left": 64, "width": 16, "height": 16,
+                "top": 0, "left": 32, "width": 16, "height": 16,
                 "frameTime": 0.1,
                 "pivot": { "x": 0.5, "y": 0.5 }
             },
             {
-                "top": 0, "left": 80, "width": 16, "height": 16,
+                "top": 0, "left": 48, "width": 16, "height": 16,
                 "frameTime": 0.1,
                 "pivot": { "x": 0.5, "y": 0.5 }
             }
         ]
     },
-    "move_left": {
+	"attack_up": {
         "isLooping": true,
         "frames": [
             {
-                "top": 0, "left": 96, "width": 16, "height": 16,
+                "top": 0, "left": 0, "width": 16, "height": 16,
+                "frameTime": 0.5,
+                "pivot": { "x": 0.5, "y": 0.5 }
+            }
+        ]
+    },
+    "attack_right": {
+        "isLooping": true,
+        "frames": [
+            {
+                "top": 0, "left": 0, "width": 16, "height": 16,
+                "frameTime": 0.5,
+                "pivot": { "x": 0.5, "y": 0.5 }
+            }
+        ]
+    },
+    "attack_down": {
+        "isLooping": true,
+        "frames": [
+            {
+                "top": 0, "left": 32, "width": 16, "height": 16,
+                "frameTime": 0.5,
+                "pivot": { "x": 0.5, "y": 0.5 }
+            }
+        ]
+    },
+    "attack_left": {
+        "isLooping": true,
+        "frames": [
+            {
+                "top": 0, "left": 32, "width": 16, "height": 16,
+                "frameTime": 0.5,
+                "pivot": { "x": 0.5, "y": 0.5 }
+            }
+        ]
+    },
+	"die": {
+        "isLooping": true,
+        "frames": [
+			{
+                "top": 16, "left": 0, "width": 16, "height": 16,
                 "frameTime": 0.1,
                 "pivot": { "x": 0.5, "y": 0.5 }
             },
             {
-                "top": 0, "left": 112, "width": 16, "height": 16,
+                "top": 16, "left": 22, "width": 20, "height": 19,
+                "frameTime": 0.1,
+                "pivot": { "x": 0.5, "y": 0.5 }
+            },
+            {
+                "top": 18, "left": 54, "width": 20, "height": 21,
+                "frameTime": 0.1,
+                "pivot": { "x": 0.5, "y": 0.5 }
+            },
+			{
+                "top": 16, "left": 85, "width": 24, "height": 23,
+                "frameTime": 0.1,
+                "pivot": { "x": 0.5, "y": 0.5 }
+            }
+        ]
+    }
+	"undie": {
+        "isLooping": true,
+        "frames": [
+            {
+                "top": 18, "left": 54, "width": 20, "height": 21,
+                "frameTime": 0.1,
+                "pivot": { "x": 0.5, "y": 0.5 }
+            },
+			{
+                "top": 16, "left": 22, "width": 20, "height": 19,
+                "frameTime": 0.1,
+                "pivot": { "x": 0.5, "y": 0.5 }
+            },
+			{
+                "top": 16, "left": 0, "width": 16, "height": 16,
                 "frameTime": 0.1,
                 "pivot": { "x": 0.5, "y": 0.5 }
             }

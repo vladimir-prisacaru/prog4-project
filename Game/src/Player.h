@@ -3,15 +3,17 @@
 #include "GameObject.h"
 #include "ICollisionReceiver.h"
 #include "InputCommand.h"
+#include "DirHelpers.h"
 
 namespace dae
 {
     class TunnelComponent;
     class GridComponent;
     class SpriteComponent;
+    class BoxCollider;
     class PlayerMoveCommand;
-    class TestGraphCommand;
     class AttackComponent;
+    class PlayerAttackCommand;
 
     class Player : public Component, public Registrar<Player>, public ICollisionReceiver
     {
@@ -32,22 +34,29 @@ namespace dae
         int GetId() const { return m_PlayerId; }
         int GetLastDirInt() const { return GetDirInt(m_LastDir); }
 
+        // Resets state fully and returns player to initial position
+        void Reset();
+
         private:
 
         enum class State
         {
             Idle,
             Moving,
-            Digging
+            Digging,
+            Attacking,
+            Dying
         };
 
         friend class PlayerMoveCommand;
-        friend class TestGraphCommand;
+        friend class PlayerAttackCommand;
 
         // Helper to resolve movement
         void HandleMovement(float deltaTime);
         // Helper to resolve animations
         void HandleAnimations();
+        // Helper to resolve death animation and deactivation
+        void HandleDeath();
 
         // Called by PlayerMoveCommand
         void SetMoveDir(glm::vec2 moveDir);
@@ -62,11 +71,8 @@ namespace dae
         glm::vec2 ClampToGrid(glm::vec2 pos) const;
         // Helper to get constrained direction (only up, down, left and right, no diagonals)
         glm::vec2 GetDir(glm::vec2 inputDir) const;
-        // Helper to get encoded direction (0 = up, 1 = right, 2 = down, 3 = left)
-        int GetDirInt(glm::vec2 dir)  const;
 
         // --- Lifetime helpers ---
-        void Reset();
         void Die();
 
         // Params
@@ -80,16 +86,19 @@ namespace dae
         glm::vec2 m_InputDir { 0.0f, 0.0f };
         glm::vec2 m_LastDir { 0.0f, 0.0f };
 
+        // Initial spawn position (set in OnInit, used by Reset)
+        glm::vec2 m_InitialPos { };
+
         // Cached components
         TunnelComponent* m_Tunnel { };
         GridComponent* m_Grid { };
         SpriteComponent* m_Sprite { };
         AttackComponent* m_Attack { };
+        BoxCollider* m_BoxCollider { };
 
+        // Cached managers (needed by Reset)
+        InputManager* m_InputManager { };
         EventManager* m_EventManager { };
-
-        // Other
-        bool m_IsDead { };
     };
 
     class PlayerMoveCommand final : public InputCommand

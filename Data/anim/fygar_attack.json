@@ -1,0 +1,52 @@
+{
+    "default": {
+        "isLooping": true,
+        "frames": [
+            {
+                "top": 0, "left": 0, "width": 16, "height": 16,
+                "frameTime": 0.5,
+                "pivot": { "x": 0.5, "y": 0.5 }
+            }
+        ]
+    },
+    "attack_right": {
+        "isLooping": false,
+        "frames": [
+            {
+                "top": 48, "left": 0, "width": 16, "height": 16,
+                "frameTime": 0.1,
+                "pivot": { "x": 0.0, "y": 0.5 }
+            },
+			{
+                "top": 48, "left": 16, "width": 32, "height": 16,
+                "frameTime": 0.1,
+                "pivot": { "x": 0.0, "y": 0.5 }
+            },
+			{
+                "top": 48, "left": 48, "width": 48, "height": 16,
+                "frameTime": 0.1,
+                "pivot": { "x": 0.0, "y": 0.5 }
+            }
+        ]
+    },
+    "attack_left": {
+        "isLooping": false,
+        "frames": [
+            {
+                "top": 64, "left": 0, "width": 16, "height": 16,
+                "frameTime": 0.1,
+                "pivot": { "x": 1.0, "y": 0.5 }
+            },
+			{
+                "top": 64, "left": 16, "width": 32, "height": 16,
+                "frameTime": 0.1,
+                "pivot": { "x": 1.0, "y": 0.5 }
+            },
+			{
+                "top": 64, "left": 48, "width": 48, "height": 16,
+                "frameTime": 0.1,
+                "pivot": { "x": 1.0, "y": 0.5 }
+            }
+        ]
+    },
+}

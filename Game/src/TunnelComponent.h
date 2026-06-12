@@ -34,16 +34,6 @@ namespace dae
         void ResolveOldTile(int outDir, TileCoords coords);
         void ResolveNewTile(int inDir, TileCoords coords);
 
-        // --- Direction Helpers ---
-        static constexpr int INVALID_DIR { -1 };
-        static constexpr int DIR_U { 0 };
-        static constexpr int DIR_R { 1 };
-        static constexpr int DIR_D { 2 };
-        static constexpr int DIR_L { 3 };
-
-        static constexpr int GetDir(int dRow, int dCol);
-        static constexpr int OppositeDir(int dir);
-
         // --- Tile Helpers ---
         bool IsTileFull(int id) const;
         bool IsTileEmpty(int id) const;

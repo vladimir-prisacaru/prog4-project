@@ -3,6 +3,7 @@
 #include "SceneManager.h"
 #include "Player.h"
 #include "Physics.h"
+#include "DirHelpers.h"
 
 #include <array>
 
@@ -132,7 +133,7 @@ namespace dae
                 continue;
             }
 
-            const int direction { GetDir(dRow, dCol) };
+            const int direction { GetDirFromDelta(dRow, dCol) };
 
             // Resolve tiles
             ResolveOldTile(direction, oldCoords);
@@ -319,49 +320,6 @@ namespace dae
 
             return;
         }
-    }
-
-
-
-    // -------------------------
-    // --- Direction helpers ---
-    // -------------------------
-
-    constexpr int TunnelComponent::GetDir(int dRow, int dCol)
-    {
-        if (dRow == 0)
-        {
-            if (dCol < 0)
-                return DIR_L;
-            else if (dCol > 0)
-                return DIR_R;
-        }
-        else if (dCol == 0)
-        {
-            if (dRow < 0)
-                return DIR_U;
-            else if (dRow > 0)
-                return DIR_D;
-        }
-
-        return INVALID_DIR;
-    }
-
-    constexpr int TunnelComponent::OppositeDir(int dir)
-    {
-        switch (dir)
-        {
-            case DIR_U:
-                return DIR_D;
-            case DIR_R:
-                return DIR_L;
-            case DIR_D:
-                return DIR_U;
-            case DIR_L:
-                return DIR_R;
-        }
-
-        return INVALID_DIR;
     }
 
 

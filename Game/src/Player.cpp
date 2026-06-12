@@ -4,8 +4,10 @@
 #include "TunnelComponent.h"
 #include "SpriteComponent.h"
 #include "AttackComponent.h"
+#include "BoxCollider.h"
 #include "Enemy.h"
 #include "EventManager.h"
+#include "DirHelpers.h"
 
 #include <array>
 
@@ -21,6 +23,9 @@ namespace dae
 
     void Player::OnInit(EngineCtx& ctx)
     {
+        m_InputManager = ctx.inputManager;
+        m_EventManager = ctx.eventManager;
+
         SetupInput(ctx.inputManager);
 
         // Get the tunnel component
@@ -32,10 +37,14 @@ namespace dae
         // Get attack component
         m_Attack = GetOwner()->GetChildCount() > 0 ?
             GetOwner()->GetChildById(0)->GetComponent<AttackComponent>() : nullptr;
+        // Get box collider
+        m_BoxCollider = GetComponent<BoxCollider>();
 
-        // Snap to current tile center
+        // Snap to current tile center and record as initial position
         auto& transform { GetTransform() };
-        transform.SetLocalPos(GetTileCenter(transform.GetLocalPos()));
+        const glm::vec2 snapped { GetTileCenter(transform.GetLocalPos()) };
+        transform.SetLocalPos(snapped);
+        m_InitialPos = snapped;
     }
 
     void Player::Update(EngineCtx& ctx)
@@ -43,8 +52,11 @@ namespace dae
         if (m_Tunnel == nullptr || m_Grid == nullptr)
             return;
 
-        if (m_IsDead)
+        if (m_CurrentState == State::Dying)
+        {
+            HandleDeath();
             return;
+        }
 
         HandleMovement(ctx.deltaTime);
         HandleAnimations();
@@ -57,6 +69,9 @@ namespace dae
 
     void Player::OnOverlap(ICollider* other)
     {
+        if (m_CurrentState == State::Dying)
+            return;
+
         // If got hit by another attack
         if (auto* comp { dynamic_cast<Component*>(other) };
             comp != nullptr)
@@ -111,6 +126,16 @@ namespace dae
 
     void Player::HandleMovement(float deltaTime)
     {
+        // Attacking: block movement, but check if attack has stopped
+        if (m_CurrentState == State::Attacking)
+        {
+            if (m_Attack == nullptr || !m_Attack->IsAttacking())
+                m_CurrentState = State::Idle;
+
+            m_InputDir = glm::vec2 { 0.0f, 0.0f };
+            return;
+        }
+
         // Skip if can't move
         if (m_CurrentState != State::Idle && m_CurrentState != State::Moving &&
             m_CurrentState != State::Digging)
@@ -215,11 +240,21 @@ namespace dae
             case State::Digging:
                 m_Sprite->SetAnimationIfChanged(digNames[GetDirInt(m_LastDir)]);
                 break;
+            case State::Attacking:
+                // Attack animation is driven by AttackComponent on the child
+                m_Sprite->SetAnimationIfChanged(idleNames[GetDirInt(m_LastDir)]);
+                break;
+            case State::Dying:
+                // Set once in Die(), not updated each frame
+                break;
         }
     }
 
     void Player::SetMoveDir(glm::vec2 moveDir)
     {
+        if (m_CurrentState == State::Attacking || m_CurrentState == State::Dying)
+            return;
+
         if (glm::length(m_InputDir) > 0.01f)
             return;
 
@@ -378,41 +413,60 @@ namespace dae
         return bestDir;
     }
 
-    int Player::GetDirInt(glm::vec2 dir) const
+    void Player::HandleDeath()
     {
-        if (glm::length(dir) < 0.01f)
-            return 0;
+        if (m_Sprite->IsAnimationFinished("die"))
+        {
+            // Move far offscreen so nothing interacts with the player
+            GetTransform().SetLocalPos(glm::vec2 { -99999.0f, -99999.0f });
 
-        dir = glm::normalize(dir);
+            // Disable collider so no further hits register
+            if (m_BoxCollider != nullptr)
+                m_BoxCollider->SetEnabled(false);
 
-        const glm::vec2 u { 0.0f, -1.0f };
-        const glm::vec2 r { 1.0f,  0.0f };
-        const glm::vec2 d { 0.0f,  1.0f };
-        const glm::vec2 l { -1.0f,  0.0f };
-
-        float bestDot = glm::dot(dir, u);
-        int bestIndex = 0;
-
-        float dotR = glm::dot(dir, r);
-        if (dotR > bestDot) { bestDot = dotR; bestIndex = 1; }
-
-        float dotD = glm::dot(dir, d);
-        if (dotD > bestDot) { bestDot = dotD; bestIndex = 2; }
-
-        float dotL = glm::dot(dir, l);
-        if (dotL > bestDot) { bestDot = dotL; bestIndex = 3; }
-
-        return bestIndex;
+            // Remove input so the player cannot move or attack
+            RemoveInput(m_InputManager);
+        }
     }
 
     void Player::Reset()
     {
-        // reset state
+        // Restore position
+        GetTransform().SetLocalPos(m_InitialPos);
+
+        // Clear movement state
+        m_InputDir = glm::vec2 { 0.0f, 0.0f };
+        m_LastDir = glm::vec2 { 0.0f, 0.0f };
+
+        // Clear state
+        m_CurrentState = State::Idle;
+
+        // Stop any active attack
+        if (m_Attack != nullptr)
+            m_Attack->StopAttacking();
+
+        // Re-enable collider
+        if (m_BoxCollider != nullptr)
+            m_BoxCollider->SetEnabled(true);
+
+        // Restore input
+        SetupInput(m_InputManager);
+
+        // Restore idle animation
+        if (m_Sprite != nullptr)
+            m_Sprite->SetAnimation("idle_right");
     }
 
     void Player::Die()
     {
-        m_IsDead = true;
+        if (m_CurrentState == State::Dying)
+            return;
+
+        m_CurrentState = State::Dying;
+
+        // Stop any active attack
+        if (m_Attack != nullptr)
+            m_Attack->StopAttacking();
 
         m_Sprite->SetAnimation("die");
 
@@ -429,9 +483,18 @@ namespace dae
         if (m_AttackComp == nullptr || m_Player == nullptr)
             return;
 
+        if (m_Player->m_CurrentState == Player::State::Dying)
+            return;
+
         if (m_Start)
+        {
             m_AttackComp->StartAttacking(m_Player->GetLastDirInt(), false);
+            m_Player->m_CurrentState = Player::State::Attacking;
+        }
         else
+        {
             m_AttackComp->StopAttacking();
+            // State will be reset to Idle by HandleMovement next frame
+        }
     }
 }

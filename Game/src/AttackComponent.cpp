@@ -89,6 +89,7 @@ namespace dae
         m_CurrentAnimName = attackNames[dir];
         m_Sprite->SetAnimation(m_CurrentAnimName);
         m_AutoStops = autoStop;
+        m_IsAttacking = true;
     }
 
     void AttackComponent::StopAttacking()
@@ -96,6 +97,7 @@ namespace dae
         if (!m_IsAttacking)
             return;
 
+        m_IsAttacking = false;
         m_BoxCollider->SetEnabled(false);
         m_Sprite->SetAnimation("idle");
     }

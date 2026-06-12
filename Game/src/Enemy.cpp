@@ -4,6 +4,7 @@
 #include "SpriteComponent.h"
 #include "AttackComponent.h"
 #include "EventManager.h"
+#include "DirHelpers.h"
 
 #include <array>
 
@@ -61,48 +62,51 @@ namespace dae
             }
         }
 
-        m_PathfindTimer += ctx.deltaTime;
-
-        const bool timerFired { m_PathfindTimer >= m_PathfindFrequency };
-        const bool targetChanged { m_TargetPlayer != closestPlayer };
-
-        if (timerFired || targetChanged)
+        // Only pathfind and try to attack when in a navigating state
+        if (m_CurrentState == State::Idle || m_CurrentState == State::Wander ||
+            m_CurrentState == State::Seek)
         {
-            m_TargetPlayer = closestPlayer;
-            m_PathfindTimer = 0.0f;
+            m_PathfindTimer += ctx.deltaTime;
 
-            if (PathfindToPlayer())
+            const bool timerFired { m_PathfindTimer >= m_PathfindFrequency };
+            const bool targetChanged { m_TargetPlayer != closestPlayer };
+
+            if (timerFired || targetChanged)
             {
-                // Successfully found a path: enter/stay in Seek.
-                // Clear the wander cache so it doesn't interfere if we later
-                // fall back to wandering.
-                m_CachedWanderPath = Path { };
-                m_CurrentState = State::Seek;
-            }
-            else
-            {
-                // Can't reach player — wander if not already doing so.
-                // We deliberately do NOT interrupt an in-progress wander, both
-                // to avoid thrashing and because the existing path is still valid.
-                if (m_CurrentState != State::Wander)
+                m_TargetPlayer = closestPlayer;
+                m_PathfindTimer = 0.0f;
+
+                if (PathfindToPlayer())
                 {
-                    if (FindWanderPath())
-                        m_CurrentState = State::Wander;
-                    else
-                        m_CurrentState = State::Idle;
+                    // Successfully found a path: enter/stay in Seek.
+                    // Clear the wander cache so it doesn't interfere if we later
+                    // fall back to wandering.
+                    m_CachedWanderPath = Path { };
+                    m_CurrentState = State::Seek;
+                }
+                else
+                {
+                    // Can't reach player — wander if not already doing so.
+                    // We deliberately do NOT interrupt an in-progress wander, both
+                    // to avoid thrashing and because the existing path is still valid.
+                    if (m_CurrentState != State::Wander)
+                    {
+                        if (FindWanderPath())
+                            m_CurrentState = State::Wander;
+                        else
+                            m_CurrentState = State::Idle;
+                    }
                 }
             }
-        }
 
-        if (m_CurrentState != State::Attack)
-        {
             if (TryAttack())
-                m_CurrentState == State::Attack;
+                m_CurrentState = State::Attack;
         }
 
         HandleMovement(ctx.deltaTime);
         HandleAttack();
         HandleDeath();
+        HandleUndeath();
         HandleAnimations();
     }
 
@@ -111,7 +115,7 @@ namespace dae
 
     void Enemy::OnOverlap(ICollider* other)
     {
-        if (m_CurrentState == State::Dying || m_CurrentState == State::Dead)
+        if (m_CurrentState == State::Dying || m_CurrentState == State::Undying)
             return;
 
         if (m_CurrentAttacker != nullptr)
@@ -129,6 +133,10 @@ namespace dae
                     m_CurrentAttacker = attack;
 
                     m_CurrentState = State::Dying;
+
+                    // Stop our own attack if we were attacking
+                    if (m_Attack != nullptr)
+                        m_Attack->StopAttacking();
 
                     return;
                 }
@@ -357,8 +365,17 @@ namespace dae
         if (m_CurrentState != State::Attack)
             return;
 
-        if (m_Sprite->IsAnimationFinished("attack"))
+        if (m_Attack == nullptr)
+        {
             m_CurrentState = State::Idle;
+            return;
+        }
+
+        if (m_Attack->IsFinished())
+        {
+            m_Attack->StopAttacking();
+            m_CurrentState = State::Idle;
+        }
     }
 
     void Enemy::HandleAnimations()
@@ -474,32 +491,8 @@ namespace dae
                 return true;
             }
         }
+
+        return false;
     }
 
-    int Enemy::GetDirInt(glm::vec2 dir) const
-    {
-        if (glm::length(dir) < 0.01f)
-            return 1; // default: right
-
-        dir = glm::normalize(dir);
-
-        const glm::vec2 u { 0.0f, -1.0f };
-        const glm::vec2 r { 1.0f,  0.0f };
-        const glm::vec2 d { 0.0f,  1.0f };
-        const glm::vec2 l { -1.0f,  0.0f };
-
-        float bestDot { glm::dot(dir, u) };
-        int bestIdx { 0 };
-
-        const float dotR { glm::dot(dir, r) };
-        if (dotR > bestDot) { bestDot = dotR; bestIdx = 1; }
-
-        const float dotD { glm::dot(dir, d) };
-        if (dotD > bestDot) { bestDot = dotD; bestIdx = 2; }
-
-        const float dotL { glm::dot(dir, l) };
-        if (dotL > bestDot) { bestIdx = 3; }
-
-        return bestIdx;
-    }
 }

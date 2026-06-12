@@ -3,6 +3,7 @@
 #include "GameObject.h"
 #include "ICollisionReceiver.h"
 #include "TunnelComponent.h"
+#include "DirHelpers.h"
 
 namespace dae
 {
@@ -54,9 +55,6 @@ namespace dae
 
         // Checks if attacking is possible
         bool TryAttack();
-
-        // Returns the cardinal direction index (0=up,1=right,2=down,3=left) from a direction vector
-        int GetDirInt(glm::vec2 dir) const;
 
         // --- Params ---
 

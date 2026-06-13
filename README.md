@@ -5,6 +5,13 @@ Exam project for the Programming 4 course in Howest DAE
 
 Created a 2D game engine, and an implementation of Dig Dug built on top of it.
 
+
+
+**Controls:**
+
+Gamepad: D-pad - move, X - attack
+Keyboard: WASD (P1) / Arrows (P2) - move, F (P1) / L (P2) - attack
+
 ---
 
 ## Engine

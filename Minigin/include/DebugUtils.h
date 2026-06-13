@@ -16,7 +16,8 @@ inline std::ofstream& getLogFile()
 
 
 template<typename... Args>
-inline void logMsg(std::format_string<Args...> fmt, Args&&... args)
+inline void logMsg([[maybe_unused]] std::format_string<Args...> fmt,
+    [[maybe_unused]] Args&&... args)
 {
     #ifdef _DEBUG
 
@@ -28,7 +29,8 @@ inline void logMsg(std::format_string<Args...> fmt, Args&&... args)
 }
 
 template<typename... Args>
-inline void logWarning(std::format_string<Args...> fmt, Args&&... args)
+inline void logWarning([[maybe_unused]] std::format_string<Args...> fmt,
+    [[maybe_unused]] Args&&... args)
 {
     #ifdef _DEBUG
 
@@ -40,7 +42,8 @@ inline void logWarning(std::format_string<Args...> fmt, Args&&... args)
 }
 
 template<typename... Args>
-inline void logError(std::format_string<Args...> fmt, Args&&... args)
+inline void logError([[maybe_unused]] std::format_string<Args...> fmt,
+    [[maybe_unused]] Args&&... args)
 {
     #ifdef _DEBUG
 
@@ -52,7 +55,8 @@ inline void logError(std::format_string<Args...> fmt, Args&&... args)
 }
 
 template<typename... Args>
-inline void logCaughtException(std::format_string<Args...> fmt, Args&&... args)
+inline void logCaughtException([[maybe_unused]] std::format_string<Args...> fmt,
+    [[maybe_unused]] Args&&... args)
 {
     #ifdef _DEBUG
 

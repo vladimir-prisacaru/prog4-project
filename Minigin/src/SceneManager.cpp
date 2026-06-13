@@ -53,14 +53,14 @@ namespace dae
 
     void SceneManager::Update(float deltaTime)
     {
-        LoadAllScheduledScenes();
-
-        CleanupUnloadedScenes();
-
         for (auto& scene : m_Scenes)
         {
             scene->Update(deltaTime);
         }
+
+        CleanupUnloadedScenes();
+
+        LoadAllScheduledScenes();
     }
 
     void SceneManager::FixedUpdate(float deltaTime)

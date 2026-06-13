@@ -100,6 +100,9 @@ namespace dae
         // Used to check if the enemy is currently being attacked
         AttackComponent* m_CurrentAttacker { };
 
+        // Initial spawn position (set in OnInit, used by Reset)
+        glm::vec2 m_InitialPos { };
+
         // Last movement direction (used for animations)
         glm::vec2 m_LastDir { 1.0f, 0.0f };
 

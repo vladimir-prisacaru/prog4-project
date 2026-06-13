@@ -49,6 +49,11 @@ namespace dae
 
         // Allow attacking immediately
         m_AttackCooldownTimer = m_AttackCooldown;
+
+        // Record initial spawn position
+        m_InitialPos = GetTransform().GetWorldPos();
+
+        ctx.eventManager->NotifyObservers(Event { GameEvent::EnemySpawned });
     }
 
     void Enemy::Update(EngineCtx& ctx)
@@ -168,8 +173,34 @@ namespace dae
 
     void Enemy::Reset()
     {
-        // snap to initial position
-        // reset all state
+        // Restore position
+        GetTransform().SetLocalPos(m_InitialPos);
+
+        // Clear movement state
+        m_CurrentPath = Path { };
+        m_CachedWanderPath = Path { };
+        m_NextPathNodeId = 0;
+        m_IsWanderingReversed = false;
+        m_LastDir = glm::vec2 { 1.0f, 0.0f };
+
+        // Clear targeting
+        m_TargetPlayer = nullptr;
+        m_CurrentAttacker = nullptr;
+
+        // Reset timers so pathfinding fires immediately and attack is ready
+        m_PathfindTimer = m_PathfindFrequency;
+        m_AttackCooldownTimer = m_AttackCooldown;
+
+        // Stop any active attack
+        if (m_Attack != nullptr)
+            m_Attack->StopAttacking();
+
+        // Reset state
+        m_CurrentState = State::Idle;
+
+        // Restore idle animation
+        if (m_Sprite != nullptr)
+            m_Sprite->SetAnimation("idle_right");
     }
 
     // Drops redundant path nodes

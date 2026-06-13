@@ -13,7 +13,8 @@ namespace dae
         LivesUpdated,
         LevelReset,
         GameOver,
-        GameWon
+        GameWon,
+        EnemySpawned
     };
 
     // Generic event payload sent to observers

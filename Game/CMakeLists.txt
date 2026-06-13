@@ -10,7 +10,7 @@ set(SOURCES
     src/Player.cpp
     src/TunnelComponent.cpp
     src/Enemy.cpp
- "src/AttackComponent.cpp" "src/GameManager.cpp")
+ "src/AttackComponent.cpp" "src/GameManager.cpp" "src/PlayerUI.cpp")
 
 
 if(EMSCRIPTEN)

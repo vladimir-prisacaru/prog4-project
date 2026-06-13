@@ -5,6 +5,8 @@
 
 namespace dae
 {
+    class Player;
+
     class GameManager : public Component, public Registrar<GameManager>, public IObserver
     {
         public:
@@ -22,17 +24,25 @@ namespace dae
 
         private:
 
+        enum class GameMode
+        {
+            Solo,
+            Coop,
+            Versus
+        };
+
         struct PlayerData
         {
-            bool alive { };
+            bool alive { true };
             int score { };
+            int lives { };
         };
 
         enum class State
         {
             Normal,
             LevelReset,
-            GameOver
+            LoadLevel
         };
 
         std::vector<Player*> m_Players { };
@@ -42,6 +52,8 @@ namespace dae
         void OnEnemyDied(int playerId, int points);
         void OnLastEnemyDied();
 
+        void StartReset();
+        void StartLoad();
         void ResetLevel();
         void LoadNewLevel();
 
@@ -50,14 +62,16 @@ namespace dae
         int m_MaxPlayerLives { };
         float m_LoadDelay { };
         float m_ResetDelay { };
+        std::string m_GameModeStr { };
 
         // Internal
+        GameMode m_GameMode { GameMode::Solo };
         State m_CurrentState { State::Normal };
         Scene* m_CurrentLevel { };
-        int m_CurrentLives { };
         int m_LastLevelId { };
         float m_LoadTimer { };
         float m_ResetTimer { };
+        int m_EnemyCount { -1 };
 
         // Cached
         SceneManager* m_SceneManager { };

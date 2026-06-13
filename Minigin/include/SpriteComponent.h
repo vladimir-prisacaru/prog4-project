@@ -51,6 +51,9 @@ namespace dae
         void SetAnimationIfChanged(const std::string& name);
         bool IsAnimationFinished(const std::string& name) const;
 
+        bool IsPaused() const { return m_IsPaused; }
+        void SetPaused(bool paused) { m_IsPaused = paused; }
+
         bool IsMirrored() { return m_IsMirrored; }
         void SetMirrored(bool mirrored) { m_IsMirrored = mirrored; }
 
@@ -76,6 +79,7 @@ namespace dae
         std::shared_ptr<Texture2D> m_Spritesheet { };
 
         bool m_IsMirrored { };
+        bool m_IsPaused { };
 
         AnimationMap m_Anims { };
         AnimationMap::iterator m_CurrentAnim { m_Anims.end() };

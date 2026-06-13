@@ -103,7 +103,7 @@ namespace dae
 
         Animation& anim { m_CurrentAnim->second };
 
-        if (anim.isFinished)
+        if (anim.isFinished || m_IsPaused)
             return;
 
         if (anim.accTime < anim.frames[anim.currentFrameId].frameTime)

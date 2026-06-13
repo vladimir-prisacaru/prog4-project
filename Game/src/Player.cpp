@@ -488,7 +488,17 @@ namespace dae
 
         if (m_Start)
         {
-            m_AttackComp->StartAttacking(m_Player->GetLastDirInt(), false);
+            // Callback: if the attack hits an enemy, pause until it dies
+            auto onHit { [this](ICollider* other)
+            {
+                if (auto* comp { dynamic_cast<Component*>(other) };
+                    comp != nullptr && comp->HasComponent<Enemy>())
+                {
+                    m_AttackComp->PauseAttacking();
+                }
+            } };
+
+            m_AttackComp->StartAttacking(m_Player->GetLastDirInt(), false, std::move(onHit));
             m_Player->m_CurrentState = Player::State::Attacking;
         }
         else

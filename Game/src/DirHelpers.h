@@ -38,6 +38,23 @@ namespace dae
         return bestIdx;
     }
 
+    inline constexpr glm::vec2 GetDirVec(int dir)
+    {
+        switch (dir)
+        {
+            case DIR_U:
+                return glm::vec2 {  0.0f, -1.0f };
+            case DIR_R:
+                return glm::vec2 {  1.0f,  0.0f };
+            case DIR_D:
+                return glm::vec2 {  0.0f,  1.0f };
+            case DIR_L:
+                return glm::vec2 { -1.0f,  0.0f };
+        }
+
+        return glm::vec2 { 0.0f, 0.0f };
+    }
+
     // Returns the direction index (0=up,1=right,2=down,3=left) from a row/col delta
     inline constexpr int GetDirFromDelta(int dRow, int dCol)
     {

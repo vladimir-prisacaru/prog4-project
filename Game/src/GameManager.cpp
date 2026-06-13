@@ -23,6 +23,13 @@ namespace dae
         m_SceneManager = ctx.sceneManager;
         m_EventManager = ctx.eventManager;
 
+        if (m_GameModeStr == "versus")
+            m_GameMode = GameMode::Versus;
+        if (m_GameModeStr == "coop")
+            m_GameMode = GameMode::Coop;
+        else
+            m_GameMode = GameMode::Solo;
+
         m_EventManager->AddListener(GameEvent::PlayerDied, this);
         m_EventManager->AddListener(GameEvent::EnemyDied, this);
         m_EventManager->AddListener(GameEvent::EnemySpawned, this);
@@ -40,17 +47,39 @@ namespace dae
                 {
                     m_Players = ctx.sceneManager->GetAllComponentsByType<Player>();
 
-                    if (!m_PlayerData.empty())
-                        m_PlayerData.clear();
-
                     for (auto& player : m_Players)
                     {
-                        PlayerData data { };
-                        data.alive = true;
-                        data.score = 0;
-                        data.lives = m_MaxPlayerLives;
+                        const int id { player->GetId() };
 
-                        m_PlayerData[player->GetId()] = data;
+                        // First ever load: create fresh data
+                        if (m_PlayerData.find(id) == m_PlayerData.end())
+                        {
+                            PlayerData data { };
+                            data.alive = true;
+                            data.score = 0;
+                            data.lives = m_MaxPlayerLives;
+
+                            m_PlayerData[id] = data;
+                        }
+                        else
+                        {
+                            // Subsequent load: carry over score, reset other
+                            m_PlayerData[id].alive = true;
+                            m_PlayerData[id].lives = m_MaxPlayerLives;
+                        }
+                    }
+
+                    // Broadcast current state so UI reflects reality on every level load
+                    for (auto& player : m_Players)
+                    {
+                        const int id { player->GetId() };
+                        const auto& data { m_PlayerData[id] };
+
+                        m_EventManager->QueueEvent(Event { GameEvent::ScoreUpdated,
+                            m_GameMode == GameMode::Versus ? id : -1, data.score });
+
+                        m_EventManager->QueueEvent(Event { GameEvent::LivesUpdated,
+                            m_GameMode == GameMode::Versus ? id : -1, data.lives });
                     }
 
                     return;
@@ -126,6 +155,24 @@ namespace dae
 
         it->second.alive = false;
 
+        // Reset score on death
+        if (m_GameMode == GameMode::Coop)
+        {
+            // Co-op: any death resets the shared score (all players)
+            for (auto& [pid, data] : m_PlayerData)
+            {
+                data.score = 0;
+                m_EventManager->QueueEvent(Event { GameEvent::ScoreUpdated, -1, 0 });
+            }
+        }
+        else
+        {
+            // Solo / Versus: only the dying player loses their score
+            it->second.score = 0;
+            m_EventManager->QueueEvent(Event { GameEvent::ScoreUpdated,
+                m_GameMode == GameMode::Versus ? id : -1, 0 });
+        }
+
         if (m_GameMode == GameMode::Versus)
         {
             it->second.lives -= 1;
@@ -164,7 +211,7 @@ namespace dae
             sharedData.lives -= 1;
 
             m_EventManager->QueueEvent(Event { GameEvent::LivesUpdated,
-                0, sharedData.lives });
+                -1, sharedData.lives });
 
             if (sharedData.lives <= 0)
             {
@@ -188,7 +235,7 @@ namespace dae
             it->second.score += points;
 
             m_EventManager->QueueEvent(Event { GameEvent::ScoreUpdated,
-                playerId, it->second.score });
+                m_GameMode == GameMode::Versus ? playerId : -1, it->second.score });
         }
         else
             logError("Unknown player (id={}) killed an enemy", playerId);

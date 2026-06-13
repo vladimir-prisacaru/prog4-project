@@ -1,0 +1,19 @@
+<scene>
+
+	<!-- Game manager object -->
+	<object>
+		<transform>
+			<position>0 0</position>
+		</transform>
+		<components>
+			<game_manager>
+				<levels>level1_solo.xml level2_solo.xml</levels>
+				<max_player_lives>3</max_player_lives>
+				<reset_delay>2</reset_delay>
+				<load_delay>2</load_delay>
+				<game_mode>solo</game_mode>
+			</game_manager>
+		</components>
+	</object>
+
+</scene>

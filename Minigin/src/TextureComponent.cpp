@@ -21,7 +21,7 @@ void dae::TextureComponent::SetTexture(std::shared_ptr<Texture2D> texture)
 void dae::TextureComponent::SetTexture(const std::string& file)
 {
     m_TexturePath = file;
-    SetTexture(m_ResourceManager->LoadTexture(file));
+    SetTexture(m_ResourceManager->LoadTexture(file, true));
 }
 
 void dae::TextureComponent::OnInit(EngineCtx& ctx)

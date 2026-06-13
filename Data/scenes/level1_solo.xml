@@ -1,24 +1,86 @@
 <scene>
 
-	<!-- Tunnel object -->
+	<!-- Background texture -->
+	<object>
+		<transform>
+			<position>0 384</position>
+		</transform>
+		<components>
+			<texture_component>
+				<texture_path>background1.png</texture_path>
+				<draw_order>0</draw_order>
+				<scale>4.0</scale>
+			</texture_component>
+		</components>
+	</object>
+	
+	<!-- Player UI -->
 	<object>
 		<transform>
 			<position>0 0</position>
+		</transform>
+		<children>
+			<object>
+				<transform>
+					<position>0 0</position>
+				</transform>
+				<components>
+					<text_component>
+						<font_path>pixelated.ttf</font_path>
+						<font_size>36</font_size>
+						<text_str>Score: 0</text_str>
+						<text_color>1.0 1.0 0.0 1.0</text_color>
+					</text_component>
+					<texture_component>
+						<texture_path>default.png</texture_path>
+						<draw_order>1000</draw_order>
+					</texture_component>
+				</components>
+			</object>
+			<object>
+				<transform>
+					<position>0 48</position>
+				</transform>
+				<components>
+					<text_component>
+						<font_path>pixelated.ttf</font_path>
+						<font_size>36</font_size>
+						<text_str>Lives: 2</text_str>
+						<text_color>1.0 1.0 0.0 1.0</text_color>
+					</text_component>
+					<texture_component>
+						<texture_path>default.png</texture_path>
+						<draw_order>1000</draw_order>
+					</texture_component>
+				</components>
+			</object>
+		</children>
+		<components>
+			<player_ui>
+				<target_player_id>-1</target_player_id>
+			</player_ui>
+		</components>
+	</object>
+	
+	<!-- Tunnel object -->
+	<object>
+		<transform>
+			<position>0 384</position>
 		</transform>
 		<components>
 			<grid_component>
 				<tiles>
 					10 10
+					26 26 26 26 26 26 26 26 26 26
+					26 26 26 26 26 26 11 13  5 26
+					26 26 26 26 26 26 26 26 26 26
 					11 13  5 26 26 26 26 26 26 26
 					26 26 26 26 26 26 26 26 26 26
-					26 26 26 26 26 26 26 26 26 26
-					11 13  5 26 26 26 26 26 26 26
-					26 26 26 26 26 26 26 26 26 26
+					26 26 26 26 11 13  5 26 26 26
 					26 26 26 26 26 26 26 26 26 26
 					26 26 26 26 26 26 26 26 26 26
 					26 26 26 26 26 26 26 26 26 26
-					26 26 26 26 26 26 26 26 26 26
-					26 26 26 26 26 26 26 26 26 26
+					26 26 26 26 11 13  5 26 26 26
 				</tiles>
 				<tile_size>64.0</tile_size>
 			</grid_component>
@@ -46,7 +108,7 @@
 	<!-- Player object -->
 	<object>
 		<transform>
-			<position>32 32</position>
+			<position>352 736</position>
 		</transform>
 		<children>
 			<object>
@@ -89,15 +151,61 @@
 		</components>
 	</object>
 
-	<!-- Test pooka -->
+	<!-- Pooka 1 -->
 	<object>
 		<transform>
-			<position>96 224</position>
+			<position>480 420</position>
 		</transform>
 		<components>
 			<enemy>
 				<pathfind_frequency>0.5</pathfind_frequency>
-				<move_speed>50</move_speed>
+				<move_speed>66</move_speed>
+			</enemy>
+			<sprite_component>
+				<spritesheet_path>anim/pooka.png</spritesheet_path>
+				<animations_path>anim/enemy.json</animations_path>
+				<draw_order>100</draw_order>
+				<scale>4.0</scale>
+			</sprite_component>
+			<box_collider>
+				<center>0 0</center>
+				<extents>25 25</extents>
+			</box_collider>
+		</components>
+	</object>
+
+	<!-- Pooka 2 -->
+	<object>
+		<transform>
+			<position>96 608</position>
+		</transform>
+		<components>
+			<enemy>
+				<pathfind_frequency>0.5</pathfind_frequency>
+				<move_speed>66</move_speed>
+			</enemy>
+			<sprite_component>
+				<spritesheet_path>anim/pooka.png</spritesheet_path>
+				<animations_path>anim/enemy.json</animations_path>
+				<draw_order>100</draw_order>
+				<scale>4.0</scale>
+			</sprite_component>
+			<box_collider>
+				<center>0 0</center>
+				<extents>25 25</extents>
+			</box_collider>
+		</components>
+	</object>
+
+	<!-- Pooka 3 -->
+	<object>
+		<transform>
+			<position>352 992</position>
+		</transform>
+		<components>
+			<enemy>
+				<pathfind_frequency>0.5</pathfind_frequency>
+				<move_speed>66</move_speed>
 			</enemy>
 			<sprite_component>
 				<spritesheet_path>anim/pooka.png</spritesheet_path>

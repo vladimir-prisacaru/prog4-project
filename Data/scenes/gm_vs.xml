@@ -1,0 +1,19 @@
+<scene>
+
+	<!-- Game manager object -->
+	<object>
+		<transform>
+			<position>0 0</position>
+		</transform>
+		<components>
+			<game_manager>
+				<levels>level1_vs.xml level2_vs.xml</levels>
+				<max_player_lives>3</max_player_lives>
+				<reset_delay>2</reset_delay>
+				<load_delay>2</load_delay>
+				<game_mode>versus</game_mode>
+			</game_manager>
+		</components>
+	</object>
+
+</scene>

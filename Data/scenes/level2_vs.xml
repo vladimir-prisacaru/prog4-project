@@ -14,7 +14,7 @@
 		</components>
 	</object>
 
-	<!-- Player UI -->
+	<!-- Player 1 UI -->
 	<object>
 		<transform>
 			<position>0 0</position>
@@ -57,7 +57,55 @@
 		</children>
 		<components>
 			<player_ui>
-				<target_player_id>-1</target_player_id>
+				<target_player_id>0</target_player_id>
+			</player_ui>
+		</components>
+	</object>
+
+	<!-- Player 2 UI -->
+	<object>
+		<transform>
+			<position>300 0</position>
+		</transform>
+		<children>
+			<object>
+				<transform>
+					<position>0 0</position>
+				</transform>
+				<components>
+					<text_component>
+						<font_path>pixelated.ttf</font_path>
+						<font_size>36</font_size>
+						<text_str>Score: 0</text_str>
+						<text_color>1.0 1.0 0.0 1.0</text_color>
+					</text_component>
+					<texture_component>
+						<texture_path>default.png</texture_path>
+						<draw_order>1000</draw_order>
+					</texture_component>
+				</components>
+			</object>
+			<object>
+				<transform>
+					<position>0 48</position>
+				</transform>
+				<components>
+					<text_component>
+						<font_path>pixelated.ttf</font_path>
+						<font_size>36</font_size>
+						<text_str>Lives: 2</text_str>
+						<text_color>1.0 1.0 0.0 1.0</text_color>
+					</text_component>
+					<texture_component>
+						<texture_path>default.png</texture_path>
+						<draw_order>1000</draw_order>
+					</texture_component>
+				</components>
+			</object>
+		</children>
+		<components>
+			<player_ui>
+				<target_player_id>1</target_player_id>
 			</player_ui>
 		</components>
 	</object>
@@ -76,7 +124,7 @@
 					26 26 26 26 26 26 26 26 26 26
 					26 26 26 26 26 26 26 26 26 26
 					26 26 26 26 26 26 26 26 26 26
-					26 26 26 11 13 13  5 26 26 26
+					11 13  5 26 26 26 26 11 13  5
 					26 26 26 26 26 26 26 26 26 26
 					26 26 26 26 26 26 26 26 26 26
 					11 13  5 26 26 26 26 11 13  5
@@ -105,10 +153,10 @@
 		</components>
 	</object>
 
-	<!-- Player object -->
+	<!-- Player 1 object -->
 	<object>
 		<transform>
-			<position>352 736</position>
+			<position>96 736</position>
 		</transform>
 		<children>
 			<object>
@@ -118,7 +166,7 @@
 				<components>
 					<attack_component>
 						<is_friendly>true</is_friendly>
-						<can_hit_player>false</can_hit_player>
+						<can_hit_player>true</can_hit_player>
 					</attack_component>
 					<sprite_component>
 						<spritesheet_path>anim/player.png</spritesheet_path>
@@ -136,6 +184,52 @@
 		<components>
 			<player>
 				<player_id>0</player_id>
+				<move_speed>100</move_speed>
+			</player>
+			<sprite_component>
+				<spritesheet_path>anim/player.png</spritesheet_path>
+				<animations_path>anim/player.json</animations_path>
+				<draw_order>50</draw_order>
+				<scale>4.0</scale>
+			</sprite_component>
+			<box_collider>
+				<center>0 0</center>
+				<extents>25 25</extents>
+			</box_collider>
+		</components>
+	</object>
+
+	<!-- Player 2 object -->
+	<object>
+		<transform>
+			<position>544 736</position>
+		</transform>
+		<children>
+			<object>
+				<transform>
+					<position>0 0</position>
+				</transform>
+				<components>
+					<attack_component>
+						<is_friendly>true</is_friendly>
+						<can_hit_player>true</can_hit_player>
+					</attack_component>
+					<sprite_component>
+						<spritesheet_path>anim/player.png</spritesheet_path>
+						<animations_path>anim/player_attack.json</animations_path>
+						<draw_order>49</draw_order>
+						<scale>4.0</scale>
+					</sprite_component>
+					<box_collider>
+						<center>0 0</center>
+						<extents>0 0</extents>
+					</box_collider>
+				</components>
+			</object>
+		</children>
+		<components>
+			<player>
+				<player_id>1</player_id>
 				<move_speed>100</move_speed>
 			</player>
 			<sprite_component>

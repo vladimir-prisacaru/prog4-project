@@ -15,6 +15,7 @@
 #include "GridRenderer.h"
 #include "Enemy.h"
 #include "GameManager.h"
+#include "PlayerUI.h"
 
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>

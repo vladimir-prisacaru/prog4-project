@@ -1,32 +1,81 @@
 <scene>
 
-	<!-- Background texture -->
 	<object>
 		<transform>
-			<position>0 0</position>
+			<position>30 50</position>
 		</transform>
-
 		<components>
 			<texture_component>
-				<texture_path>background.png</texture_path>
-				<draw_order>-1</draw_order>
+				<texture_path>logo.png</texture_path>
+				<draw_order>1000</draw_order>
+				<scale>3.5</scale>
 			</texture_component>
 		</components>
 	</object>
 
-	<!-- Game manager object -->
 	<object>
 		<transform>
-			<position>0 0</position>
+			<position>150 300</position>
 		</transform>
+		<children>
+			<object>
+				<transform>
+					<position>0 50</position>
+				</transform>
+				<components>
+					<text_component>
+						<font_path>pixelated.ttf</font_path>
+						<font_size>36</font_size>
+						<text_str>Play Solo</text_str>
+						<text_color>1.0 1.0 1.0 1.0</text_color>
+					</text_component>
+					<texture_component>
+						<texture_path>default.png</texture_path>
+						<draw_order>1000</draw_order>
+					</texture_component>
+				</components>
+			</object>
+			<object>
+				<transform>
+					<position>0 100</position>
+				</transform>
+				<components>
+					<text_component>
+						<font_path>pixelated.ttf</font_path>
+						<font_size>36</font_size>
+						<text_str>Play Co-op</text_str>
+						<text_color>1.0 1.0 1.0 1.0</text_color>
+					</text_component>
+					<texture_component>
+						<texture_path>default.png</texture_path>
+						<draw_order>1000</draw_order>
+					</texture_component>
+				</components>
+			</object>
+			<object>
+				<transform>
+					<position>0 150</position>
+				</transform>
+				<components>
+					<text_component>
+						<font_path>pixelated.ttf</font_path>
+						<font_size>36</font_size>
+						<text_str>Play Versus</text_str>
+						<text_color>1.0 1.0 1.0 1.0</text_color>
+					</text_component>
+					<texture_component>
+						<texture_path>default.png</texture_path>
+						<draw_order>1000</draw_order>
+					</texture_component>
+				</components>
+			</object>
+		</children>
 		<components>
-			<game_manager>
-				<levels>level1_solo.xml level2_solo.xml</levels>
-				<max_player_lives>2</max_player_lives>
-				<reset_delay>2</reset_delay>
-				<load_delay>2</load_delay>
-				<game_mode>solo</game_mode>
-			</game_manager>
+			<main_menu>
+				<solo_scene>gm_solo.xml</solo_scene>
+				<coop_scene>gm_coop.xml</coop_scene>
+				<versus_scene>gm_vs.xml</versus_scene>
+			</main_menu>
 		</components>
 	</object>
 

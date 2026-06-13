@@ -79,7 +79,11 @@ namespace dae
             if (auto* attack { comp->GetComponent<AttackComponent>() };
                 attack != nullptr && attack != m_Attack)
             {
-                if (!attack->IsFriendly() && attack->CanHitPlayer())
+                auto* parent { attack->GetOwner()->GetParent() };
+                auto* otherPlayer { parent == nullptr ? nullptr : parent->GetComponent<Player>() };
+                bool samePlayer { otherPlayer == nullptr ? true : otherPlayer == this }; // assume same player
+
+                if (!attack->IsFriendly() || (attack->CanHitPlayer() && !samePlayer))
                 {
                     Die();
 

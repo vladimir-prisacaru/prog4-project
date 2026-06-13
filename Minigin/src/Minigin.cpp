@@ -104,8 +104,8 @@ dae::Minigin::Minigin(const std::filesystem::path& dataPath)
 
     g_Window = SDL_CreateWindow(
         "Programming 4 assignment",
+        640,
         1024,
-        576,
         SDL_WINDOW_OPENGL
     );
 

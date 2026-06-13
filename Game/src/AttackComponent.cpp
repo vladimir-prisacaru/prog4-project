@@ -78,7 +78,7 @@ namespace dae
         {
             const glm::vec2 dir { GetDirVec(m_CurrentDir) };
             const bool isVertical { m_CurrentDir == DIR_U || m_CurrentDir == DIR_D };
-            const float maxDist { isVertical ? extents.y : extents.x };
+            const float maxDist { isVertical ? height : width };
 
             const Ray ray { GetTransform().GetWorldPos(), dir };
             const RaycastHit hit { m_Physics->Raycast<GridCollider>(ray, maxDist) };

@@ -65,7 +65,7 @@
 	<!-- Player 2 UI -->
 	<object>
 		<transform>
-			<position>300 0</position>
+			<position>0 120</position>
 		</transform>
 		<children>
 			<object>
@@ -156,7 +156,7 @@
 	<!-- Player 1 object -->
 	<object>
 		<transform>
-			<position>288 800</position>
+			<position>96 800</position>
 		</transform>
 		<children>
 			<object>
@@ -202,7 +202,7 @@
 	<!-- Player 2 object -->
 	<object>
 		<transform>
-			<position>352 800</position>
+			<position>480 800</position>
 		</transform>
 		<children>
 			<object>

@@ -73,7 +73,7 @@ namespace dae
         glm::vec2 GetDir(glm::vec2 inputDir) const;
 
         // --- Lifetime helpers ---
-        void Die();
+        void Die(int killerId = -1);
 
         // Params
         int m_PlayerId { };

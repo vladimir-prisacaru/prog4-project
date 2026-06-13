@@ -48,7 +48,7 @@ namespace dae
         std::vector<Player*> m_Players { };
         std::unordered_map<int, PlayerData> m_PlayerData { };
 
-        void OnPlayerDied(int id);
+        void OnPlayerDied(int id, int killerId);
         void OnEnemyDied(int playerId, int points);
         void OnLastEnemyDied();
 

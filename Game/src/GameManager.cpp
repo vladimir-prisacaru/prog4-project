@@ -25,7 +25,7 @@ namespace dae
 
         if (m_GameModeStr == "versus")
             m_GameMode = GameMode::Versus;
-        if (m_GameModeStr == "coop")
+        else if (m_GameModeStr == "coop")
             m_GameMode = GameMode::Coop;
         else
             m_GameMode = GameMode::Solo;
@@ -63,7 +63,7 @@ namespace dae
                         }
                         else
                         {
-                            // Subsequent load: carry over score, reset other
+                            // New level load: reset lives, carry score
                             m_PlayerData[id].alive = true;
                             m_PlayerData[id].lives = m_MaxPlayerLives;
                         }
@@ -128,7 +128,7 @@ namespace dae
         switch (event.id)
         {
             case GameEvent::PlayerDied:
-                OnPlayerDied(event.value1);
+                OnPlayerDied(event.value1, event.value2);
                 break;
             case GameEvent::EnemyDied:
                 OnEnemyDied(event.value1, event.value2);
@@ -139,7 +139,7 @@ namespace dae
         }
     }
 
-    void GameManager::OnPlayerDied(int id)
+    void GameManager::OnPlayerDied(int id, int killerId)
     {
         if (m_CurrentState != State::Normal)
             return;
@@ -155,26 +155,23 @@ namespace dae
 
         it->second.alive = false;
 
-        // Reset score on death
-        if (m_GameMode == GameMode::Coop)
-        {
-            // Co-op: any death resets the shared score (all players)
-            for (auto& [pid, data] : m_PlayerData)
-            {
-                data.score = 0;
-                m_EventManager->QueueEvent(Event { GameEvent::ScoreUpdated, -1, 0 });
-            }
-        }
-        else
-        {
-            // Solo / Versus: only the dying player loses their score
-            it->second.score = 0;
-            m_EventManager->QueueEvent(Event { GameEvent::ScoreUpdated,
-                m_GameMode == GameMode::Versus ? id : -1, 0 });
-        }
-
         if (m_GameMode == GameMode::Versus)
         {
+            // Award points to the killer if killed by another player
+            if (killerId >= 0 && killerId != id)
+            {
+                auto killerIt { m_PlayerData.find(killerId) };
+
+                if (killerIt != m_PlayerData.end())
+                {
+                    const int killScore { 500 };
+                    killerIt->second.score += killScore;
+
+                    m_EventManager->QueueEvent(Event { GameEvent::ScoreUpdated,
+                        killerId, killerIt->second.score });
+                }
+            }
+
             it->second.lives -= 1;
 
             m_EventManager->QueueEvent(Event { GameEvent::LivesUpdated,
@@ -204,9 +201,7 @@ namespace dae
         }
         else
         {
-            // Solo / Co-op: shared lives, stored on player 0's data but tracked via first entry
-            // Decrement all players' lives by the same amount (they share the pool via player 0)
-            // We use the first player's lives as the shared counter
+            // Solo / Co-op: shared lives tracked via the first player's entry
             auto& sharedData { m_PlayerData.begin()->second };
             sharedData.lives -= 1;
 
@@ -275,9 +270,9 @@ namespace dae
         m_LoadTimer = 0.0f;
         m_CurrentState = State::LoadLevel;
 
-        // Clear player refs now to avoid dangling pointers after scene unload
+        // Clear player refs now to avoid dangling pointers after scene unload.
+        // Keep m_PlayerData so scores carry across levels.
         m_Players.clear();
-        m_PlayerData.clear();
 
         m_EnemyCount = -1;
     }

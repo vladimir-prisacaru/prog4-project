@@ -65,7 +65,7 @@
 	<!-- Player 2 UI -->
 	<object>
 		<transform>
-			<position>300 0</position>
+			<position>0 120</position>
 		</transform>
 		<children>
 			<object>

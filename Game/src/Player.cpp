@@ -85,7 +85,8 @@ namespace dae
 
                 if (!attack->IsFriendly() || (attack->CanHitPlayer() && !samePlayer))
                 {
-                    Die();
+                    const int killerId { otherPlayer != nullptr ? otherPlayer->GetId() : -1 };
+                    Die(killerId);
 
                     return;
                 }
@@ -93,7 +94,7 @@ namespace dae
 
             if (comp->HasComponent<Enemy>())
             {
-                Die();
+                Die(-1);
 
                 return;
             }
@@ -461,7 +462,7 @@ namespace dae
             m_Sprite->SetAnimation("idle_right");
     }
 
-    void Player::Die()
+    void Player::Die(int killerId)
     {
         if (m_CurrentState == State::Dying)
             return;
@@ -474,7 +475,7 @@ namespace dae
 
         m_Sprite->SetAnimation("die");
 
-        m_EventManager->QueueEvent(Event { GameEvent::PlayerDied, m_PlayerId });
+        m_EventManager->QueueEvent(Event { GameEvent::PlayerDied, m_PlayerId, killerId });
     }
 
     void PlayerMoveCommand::Execute()

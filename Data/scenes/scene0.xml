@@ -78,6 +78,18 @@
 		</components>
 	</object>
 
+	<!-- Game manager object -->
+	<object>
+		<transform>
+			<position>0 0</position>
+		</transform>
+		<components>
+			<game_manager>
+
+			</game_manager>
+		</components>
+	</object>
+
 	<!-- Tunnel object -->
 	<object>
 		<transform>

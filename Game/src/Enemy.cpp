@@ -166,6 +166,12 @@ namespace dae
         }
     }
 
+    void Enemy::Reset()
+    {
+        // snap to initial position
+        // reset all state
+    }
+
     // Drops redundant path nodes
     static void TrimRedundantLeadingNodes(Path& path, glm::vec2 startPos)
     {
@@ -467,7 +473,9 @@ namespace dae
                 playerId = player->GetId();
         }
 
-        m_EventManager->QueueEvent(Event { GameEvent::EnemyDied, playerId });
+        const int score { 100 }; // placeholder
+
+        m_EventManager->QueueEvent(Event { GameEvent::EnemyDied, playerId, score });
     }
 
     bool Enemy::TryAttack()

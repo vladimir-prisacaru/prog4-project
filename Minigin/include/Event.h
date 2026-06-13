@@ -8,7 +8,12 @@ namespace dae
     enum class GameEvent : uint32_t
     {
         PlayerDied,
-        EnemyDied
+        EnemyDied,
+        ScoreUpdated,
+        LivesUpdated,
+        LevelReset,
+        GameOver,
+        GameWon
     };
 
     // Generic event payload sent to observers

@@ -27,6 +27,8 @@ namespace dae
         void OnOverlap(ICollider* other) override;
         void OnOverlapEnd(ICollider* other) override;
 
+        void Reset();
+
         private:
 
         enum class State

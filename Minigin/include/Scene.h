@@ -26,7 +26,7 @@ namespace dae
             for (auto& obj : m_Objects)
             {
                 if (obj->HasComponent<T>())
-                    result.push_back(obj);
+                    result.push_back(obj.get());
             }
 
             return result;

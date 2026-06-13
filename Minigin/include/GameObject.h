@@ -489,6 +489,21 @@ namespace dae
 
                 return true;
             }
+            else if constexpr (std::is_same_v<T, fs::path>)
+            {
+                std::string val { };
+
+                if (!(iss >> val) || val.empty())
+                {
+                    logError("Failed to parse std::filesystem::path value.");
+
+                    return false;
+                }
+
+                value = fs::path { val };
+
+                return true;
+            }
             else if constexpr (std::is_same_v<T, bool>)
             {
                 iss >> std::boolalpha;

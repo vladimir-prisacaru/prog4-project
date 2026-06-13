@@ -16,7 +16,7 @@ namespace dae
         return m_Scenes.back().get();
     }
 
-    void SceneManager::LoadScene(const fs::path& file)
+    void SceneManager::LoadScene(const fs::path& file, Scene** toSetWhenDone)
     {
         fs::path fullPath { m_ScenesPath / file };
 
@@ -27,7 +27,7 @@ namespace dae
             return;
         }
 
-        m_ScheduledToLoad.push(fullPath);
+        m_ScheduledToLoad.push({ fullPath, toSetWhenDone });
     }
 
     void SceneManager::UnloadScene(Scene* scene)
@@ -78,11 +78,16 @@ namespace dae
 
         while (!m_ScheduledToLoad.empty())
         {
-            fs::path path { std::move(m_ScheduledToLoad.front()) };
+            auto [path, toSetWhenDone] { std::move(m_ScheduledToLoad.front()) };
             m_ScheduledToLoad.pop();
 
             if (Scene* scene { LoadScheduledScene(path) })
+            {
                 scenesToInit.push_back(scene);
+
+                if (toSetWhenDone != nullptr)
+                    *toSetWhenDone = scene;
+            }
         }
 
         for (auto& scene : scenesToInit)

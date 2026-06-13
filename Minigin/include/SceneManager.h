@@ -28,8 +28,9 @@ namespace dae
 
         /* Creates an empty scene */
         Scene* CreateScene();
-        /* Schedules a scene to be loaded from a .xml file at the end of the frame */
-        void LoadScene(const fs::path& file);
+        /* Schedules a scene to be loaded from a .xml file at the end of the frame
+           */
+        void LoadScene(const fs::path& file, Scene** toSetWhenDone = nullptr);
         /* Schedules a scene to be destroyed at the end of the frame */
         void UnloadScene(Scene* scene);
 
@@ -109,7 +110,7 @@ namespace dae
 
         fs::path m_ScenesPath { };
 
-        std::queue<fs::path> m_ScheduledToLoad { };
+        std::queue<std::pair<fs::path, Scene**>> m_ScheduledToLoad { };
 
         std::vector<std::unique_ptr<Scene>> m_Scenes { };
 

@@ -57,13 +57,7 @@ namespace dae
 
             // Skip invalid coords
             if (newCoords == INVALID_TILE_COORD)
-            {
-                logWarning(
-                    "Player (id={}) placed at invalid tile coords in the grid!",
-                    player->GetId());
-
                 continue;
-            }
 
             // Set initial state
             if (oldCoords == INVALID_TILE_COORD)

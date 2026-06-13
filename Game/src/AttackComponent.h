@@ -10,6 +10,7 @@ namespace dae
     class SpriteComponent;
     class BoxCollider;
     class Physics;
+    class ServiceLocator;
 
     class AttackComponent : public Component, public Registrar<AttackComponent>, public ICollisionReceiver
     {
@@ -52,6 +53,7 @@ namespace dae
         SpriteComponent* m_Sprite { };
         BoxCollider* m_BoxCollider { };
         Physics* m_Physics { };
+        ServiceLocator* m_Services { };
 
         std::string m_CurrentAnimName { };
         int m_CurrentDir { -1 };

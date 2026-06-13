@@ -6,6 +6,7 @@
 namespace dae
 {
     class Player;
+    class ServiceLocator;
 
     class GameManager : public Component, public Registrar<GameManager>, public IObserver
     {
@@ -76,5 +77,6 @@ namespace dae
         // Cached
         SceneManager* m_SceneManager { };
         EventManager* m_EventManager { };
+        ServiceLocator* m_Services { };
     };
 }

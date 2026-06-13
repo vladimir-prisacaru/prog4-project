@@ -12,9 +12,17 @@
 
 
 
-// Internal request type
+enum class RequestType
+{
+    Play,
+    PlayLooping,
+    PlayIfNotPlaying,
+    Stop
+};
+
 struct PlayRequest
 {
+    RequestType type { RequestType::Play };
     std::string name { };
     float volume { };
 };
@@ -47,11 +55,11 @@ class dae::SoundSystemSDL::Impl
         m_DataPath = dataPath;
     }
 
-    void Play(std::string_view id, float volume)
+    void Enqueue(RequestType type, std::string_view id, float volume)
     {
         {
             std::lock_guard lock(m_Mutex);
-            m_Queue.push({ std::string(id), volume });
+            m_Queue.push({ type, std::string(id), volume });
         }
 
         m_CV.notify_one();
@@ -68,6 +76,13 @@ class dae::SoundSystemSDL::Impl
 
         m_CV.notify_one();
         m_Thread.join();
+
+        for (auto& [name, track] : m_NamedTracks)
+        {
+            MIX_StopTrack(track, 0);
+            MIX_DestroyTrack(track);
+        }
+        m_NamedTracks.clear();
 
         m_ActiveTracks.clear();
 
@@ -100,41 +115,102 @@ class dae::SoundSystemSDL::Impl
                 m_Queue.pop();
             }
 
-            PlayImmediate(req.name, req.volume);
+            switch (req.type)
+            {
+                case RequestType::Play:
+                    PlayImmediate(req.name, req.volume, false);
+                    break;
+                case RequestType::PlayLooping:
+                    PlayImmediate(req.name, req.volume, true);
+                    break;
+                case RequestType::PlayIfNotPlaying:
+                    PlayIfNotPlayingImmediate(req.name, req.volume);
+                    break;
+                case RequestType::Stop:
+                    StopImmediate(req.name);
+                    break;
+            }
+
             RemoveFinishedTracks();
         }
     }
 
-    void PlayImmediate(const std::string& name, float volume)
+    // Returns the named track for id, creating it if needed
+    MIX_Track* GetOrCreateNamedTrack(const std::string& name)
     {
+        auto it = m_NamedTracks.find(name);
+        if (it != m_NamedTracks.end())
+            return it->second;
+
+        MIX_Track* track = MIX_CreateTrack(m_Mixer);
+        if (!track)
+            return nullptr;
+
+        m_NamedTracks[name] = track;
+        return track;
+    }
+
+    void PlayImmediate(const std::string& name, float volume, bool loop)
+    {
+        if (!loop && volume == 1.0f)
+        {
+            // Fast path: fire-and-forget for one-shot sounds at full volume
+            MIX_Audio* audio = GetAudio(name);
+            if (audio)
+                MIX_PlayAudio(m_Mixer, audio);
+            return;
+        }
+
         MIX_Audio* audio = GetAudio(name);
         if (!audio)
             return;
 
-        if (volume == 1.0f)
-        {
-            MIX_PlayAudio(m_Mixer, audio); // SDL3_mixer manages the track lifetime
-            return;
-        }
-
-        // For non-default volume we need an explicit track so we can set gain
-        MIX_Track* track = MIX_CreateTrack(m_Mixer);
+        MIX_Track* track = GetOrCreateNamedTrack(name);
         if (!track)
             return;
 
         MIX_SetTrackAudio(track, audio);
         MIX_SetTrackGain(track, volume);
 
-        if (!MIX_PlayTrack(track, 0))
-        {
-            MIX_DestroyTrack(track);
-            return;
-        }
-
-        m_ActiveTracks.push_back(track);
+        SDL_PropertiesID props = SDL_CreateProperties();
+        if (loop)
+            SDL_SetNumberProperty(props, MIX_PROP_PLAY_LOOPS_NUMBER, -1);
+        MIX_PlayTrack(track, props);
+        SDL_DestroyProperties(props);
     }
 
-    // Destroy tracks that have finished playing and remove them from the list
+    void PlayIfNotPlayingImmediate(const std::string& name, float volume)
+    {
+        MIX_Track* track = GetOrCreateNamedTrack(name);
+        if (!track)
+            return;
+
+        if (MIX_TrackPlaying(track))
+            return;
+
+        MIX_Audio* audio = GetAudio(name);
+        if (!audio)
+            return;
+
+        MIX_SetTrackAudio(track, audio);
+        MIX_SetTrackGain(track, volume);
+
+        SDL_PropertiesID props = SDL_CreateProperties();
+        SDL_SetNumberProperty(props, MIX_PROP_PLAY_LOOPS_NUMBER, -1);
+        MIX_PlayTrack(track, props);
+        SDL_DestroyProperties(props);
+    }
+
+    void StopImmediate(const std::string& name)
+    {
+        auto it = m_NamedTracks.find(name);
+        if (it == m_NamedTracks.end())
+            return;
+
+        MIX_StopTrack(it->second, 0);
+    }
+
+    // Destroy unnamed tracks that have finished playing
     // Called on the audio thread only
     void RemoveFinishedTracks()
     {
@@ -194,7 +270,8 @@ class dae::SoundSystemSDL::Impl
     fs::path m_DataPath;
     MIX_Mixer* m_Mixer = nullptr;
     std::unordered_map<std::string, AudioPtr> m_Cache; // audio thread only
-    std::vector<MIX_Track*> m_ActiveTracks; // audio thread only
+    std::unordered_map<std::string, MIX_Track*> m_NamedTracks; // audio thread only
+    std::vector<MIX_Track*> m_ActiveTracks; // audio thread only (unnamed fire-and-forget)
 
     std::thread m_Thread;
     std::mutex m_Mutex;
@@ -224,6 +301,21 @@ namespace dae
 
     void SoundSystemSDL::Play(std::string_view id, float volume)
     {
-        m_Impl->Play(id, volume);
+        m_Impl->Enqueue(RequestType::Play, id, volume);
+    }
+
+    void SoundSystemSDL::PlayLooping(std::string_view id, float volume)
+    {
+        m_Impl->Enqueue(RequestType::PlayLooping, id, volume);
+    }
+
+    void SoundSystemSDL::PlayIfNotPlaying(std::string_view id, float volume)
+    {
+        m_Impl->Enqueue(RequestType::PlayIfNotPlaying, id, volume);
+    }
+
+    void SoundSystemSDL::StopSound(std::string_view id)
+    {
+        m_Impl->Enqueue(RequestType::Stop, id, 0.0f);
     }
 }

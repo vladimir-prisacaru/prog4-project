@@ -5,6 +5,8 @@
 #include "Physics.h"
 #include "DirHelpers.h"
 #include "Enemy.h"
+#include "ServiceLocator.h"
+#include "SoundSystem.h"
 
 #include <array>
 
@@ -21,6 +23,7 @@ namespace dae
     void AttackComponent::OnInit(EngineCtx& ctx)
     {
         m_Physics = ctx.physics;
+        m_Services = ctx.services;
 
         m_Sprite = GetComponent<SpriteComponent>();
         m_BoxCollider = GetComponent<BoxCollider>();
@@ -78,7 +81,12 @@ namespace dae
         {
             const glm::vec2 dir { GetDirVec(m_CurrentDir) };
             const bool isVertical { m_CurrentDir == DIR_U || m_CurrentDir == DIR_D };
-            const float maxDist { isVertical ? height : width };
+            // maxDist is the distance from the attack origin to the far edge of the
+            // collider in the attack direction: the center offset on that axis plus
+            // the half-extent on that axis.
+            const float centerOffset { isVertical ? std::abs(center.y) : std::abs(center.x) };
+            const float halfExtent { isVertical ? extents.y : extents.x };
+            const float maxDist { centerOffset + halfExtent };
 
             const Ray ray { GetTransform().GetWorldPos(), dir };
             const RaycastHit hit { m_Physics->Raycast<GridCollider>(ray, maxDist) };
@@ -93,6 +101,16 @@ namespace dae
 
         m_BoxCollider->SetCenter(center);
         m_BoxCollider->SetExtents(extents);
+
+        // Play pump sound while the attack is connecting (paused on an enemy)
+        if (m_Services != nullptr && m_IsFriendly)
+        {
+            SoundSystem& sounds { m_Services->GetSoundSystem() };
+            if (m_IsPaused)
+                sounds.PlayIfNotPlaying("pump");
+            else
+                sounds.StopSound("pump");
+        }
     }
 
     void AttackComponent::StartAttacking(int dir, bool autoStop,
@@ -133,6 +151,9 @@ namespace dae
         m_CurrentDir = -1;
 
         m_BoxCollider->SetEnabled(false);
+
+        if (m_Services != nullptr && m_IsFriendly)
+            m_Services->GetSoundSystem().StopSound("pump");
 
         if (m_Sprite != nullptr)
         {

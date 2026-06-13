@@ -8,6 +8,8 @@
 #include "Enemy.h"
 #include "EventManager.h"
 #include "DirHelpers.h"
+#include "ServiceLocator.h"
+#include "SoundSystem.h"
 
 #include <array>
 
@@ -25,6 +27,7 @@ namespace dae
     {
         m_InputManager = ctx.inputManager;
         m_EventManager = ctx.eventManager;
+        m_Services = ctx.services;
 
         // Get the tunnel component
         m_Tunnel = ctx.sceneManager->GetFirstComponentByType<TunnelComponent>();
@@ -60,6 +63,7 @@ namespace dae
 
         HandleMovement(ctx.deltaTime);
         HandleAnimations();
+        HandleSounds();
     }
 
     void Player::OnDestroy(EngineCtx& ctx)
@@ -253,6 +257,24 @@ namespace dae
                 // Set once in Die(), not updated each frame
                 break;
         }
+    }
+
+    void Player::HandleSounds()
+    {
+        if (m_Services == nullptr)
+            return;
+
+        SoundSystem& sounds { m_Services->GetSoundSystem() };
+
+        if (m_CurrentState == State::Moving || m_CurrentState == State::Digging)
+            sounds.PlayIfNotPlaying("moving");
+        else
+            sounds.StopSound("moving");
+
+        if (m_CurrentState == State::Attacking)
+            sounds.PlayIfNotPlaying("fire_harpoon");
+        else
+            sounds.StopSound("fire_harpoon");
     }
 
     void Player::SetMoveDir(glm::vec2 moveDir)
@@ -472,6 +494,13 @@ namespace dae
         // Stop any active attack
         if (m_Attack != nullptr)
             m_Attack->StopAttacking();
+
+        if (m_Services != nullptr)
+        {
+            SoundSystem& sounds { m_Services->GetSoundSystem() };
+            sounds.StopSound("moving");
+            sounds.StopSound("fire_harpoon");
+        }
 
         m_Sprite->SetAnimation("die");
 

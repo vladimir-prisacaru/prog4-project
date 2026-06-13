@@ -14,6 +14,7 @@ namespace dae
     class PlayerMoveCommand;
     class AttackComponent;
     class PlayerAttackCommand;
+    class ServiceLocator;
 
     class Player : public Component, public Registrar<Player>, public ICollisionReceiver
     {
@@ -55,6 +56,8 @@ namespace dae
         void HandleMovement(float deltaTime);
         // Helper to resolve animations
         void HandleAnimations();
+        // Helper to resolve sounds based on current state
+        void HandleSounds();
         // Helper to resolve death animation and deactivation
         void HandleDeath();
 
@@ -99,6 +102,7 @@ namespace dae
         // Cached managers (needed by Reset)
         InputManager* m_InputManager { };
         EventManager* m_EventManager { };
+        ServiceLocator* m_Services { };
     };
 
     class PlayerMoveCommand final : public InputCommand

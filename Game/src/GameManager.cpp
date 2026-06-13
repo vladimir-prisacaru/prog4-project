@@ -2,6 +2,8 @@
 #include "SceneManager.h"
 #include "Player.h"
 #include "Enemy.h"
+#include "ServiceLocator.h"
+#include "SoundSystem.h"
 
 #include <random>
 
@@ -22,6 +24,7 @@ namespace dae
     {
         m_SceneManager = ctx.sceneManager;
         m_EventManager = ctx.eventManager;
+        m_Services = ctx.services;
 
         if (m_GameModeStr == "versus")
             m_GameMode = GameMode::Versus;
@@ -210,6 +213,9 @@ namespace dae
 
             if (sharedData.lives <= 0)
             {
+                if (m_Services != nullptr)
+                    m_Services->GetSoundSystem().Play("gameover");
+
                 m_EventManager->QueueEvent(Event { GameEvent::GameOver });
 
                 StartLoad();
@@ -249,6 +255,9 @@ namespace dae
 
         if (m_GameMode != GameMode::Versus)
         {
+            if (m_Services != nullptr)
+                m_Services->GetSoundSystem().Play("clear");
+
             // Solo: the one player wins; Co-op: both players win together
             m_EventManager->QueueEvent(Event { GameEvent::GameWon, -1 });
 

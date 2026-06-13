@@ -34,7 +34,7 @@ using namespace dae;
 
 static void load(EngineCtx& ctx)
 {
-    ctx.services->RegisterSoundSystem(std::make_unique<SoundSystemSDL>("Data/audioclips"));
+    ctx.services->RegisterSoundSystem(std::make_unique<SoundSystemSDL>("audioclips"));
 
     ctx.sceneManager->LoadScene("scene0.xml");
 }

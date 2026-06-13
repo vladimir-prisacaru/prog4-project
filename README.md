@@ -1,88 +1,47 @@
-﻿# Minigin
+﻿# Dig Dug
+Exam project for the Programming 4 course in Howest DAE
 
-Minigin is a very small project using [SDL3](https://www.libsdl.org/) and [glm](https://github.com/g-truc/glm) for 2D c++ game projects. It is in no way a game engine, only a barebone start project where everything sdl related has been set up. It contains glm for vector math, to aleviate the need to write custom vector and matrix classes.
+<img width="316" height="351" alt="image" src="https://github.com/user-attachments/assets/e571f458-e09f-418b-b431-051cb99682bf" />
 
-[![Build Status](https://github.com/avadae/minigin/actions/workflows/cmake.yml/badge.svg)](https://github.com/avadae/cmake/actions)
-[![Build Status](https://github.com/avadae/minigin/actions/workflows/emscripten.yml/badge.svg)](https://github.com/avadae/emscripten/actions)
-[![GitHub Release](https://img.shields.io/github/v/release/avadae/minigin?logo=github&sort=semver)](https://github.com/avadae/minigin/releases/latest)
+Created a 2D game engine, and an implementation of Dig Dug built on top of it.
 
-# Goal
+---
 
-Minigin can/may be used as a start project for the exam assignment in the course [Programming 4](https://youtu.be/j96Oh6vzhmg) at DAE. In that assignment students need to recreate a popular 80's arcade game with a game engine they need to program themselves. During the course we discuss several game programming patterns, using the book '[Game Programming Patterns](https://gameprogrammingpatterns.com/)' by [Robert Nystrom](https://github.com/munificent) as reading material. 
+## Engine
 
-# Disclaimer
+### Core Loop
+The engine (`Minigin`) runs a fixed-timestep loop with a capped frame rate. Physics and collision run at the fixed step; gameplay logic and rendering run at the variable frame rate. An `EngineCtx` struct is threaded through every system call so components can reach any engine service without global state.
 
-Minigin is, despite perhaps the suggestion in its name, **not** a game engine. It is just a very simple SDL3 ready project with some of the scaffolding in place to get started. None of the patterns discussed in the course are used yet (except singleton which use we challenge during the course). It is up to the students to implement their own vision for their engine, apply patterns as they see fit, create their game as efficient as possible.
+### GameObject & Component System
+Scenes are made up of `GameObject`s, each owning an arbitrary set of `Component`s. Components register themselves at static-init time via a `Registrar<T>` CRTP mixin and declare their XML-parseable parameters through `RegisterParameter`. This lets any scene be fully described in a `.xml` file — objects, their parent–child hierarchy, component types and initial values are all parsed at load time with no code changes required.
 
-# Use
+### Scene Management
+`SceneManager` loads and unloads scenes from `.xml` files. Loads are deferred to end-of-frame to avoid mutating the scene list mid-update. Multiple scenes can be live at once; `GameManager` uses this to keep itself alive across level transitions while loading and unloading level scenes underneath it.
 
-Get the source from this project, or since students need to have their work on github too, they can use this repository as a template. Hit the "Use this template" button on the top right corner of the github page of this project.
+### Physics & Collision
+A `Physics` system maintains a flat list of `ICollider`s. Each frame it tests every pair and fires `OnOverlap` / `OnOverlapEnd` on components that implement `ICollisionReceiver`, with enter/exit semantics tracked across frames. Two collider types are provided: `BoxCollider` (AABB) and `GridCollider` (tilemap solid-tile traversal). The physics system also exposes typed raycasts — `Raycast<T>()` filters to a specific collider type — used for line-of-sight checks and attack wall blocking.
 
-## Windows version
+### Event System
+`EventManager` implements a queued observer pattern. Components subscribe to specific `GameEvent` types; events are buffered during the frame and dispatched in a single `FlushEvents` call after update, preventing mid-frame mutations. A separate `Subject` mixin is available for direct (non-queued) local notifications.
 
-Either
-- Open the root folder in Visual Studio 2026; this will be recognized as a cmake project.
-  
-Or
-- Install CMake 
-- Install CMake and CMake Tools extensions in Visual Code
-- Open the root folder in Visual Code,  this will be recognized as a cmake project.
+### Input
+`InputManager` maps keyboard keys and Xbox controller buttons to `InputCommand` objects with configurable trigger states (`Pressed`, `Down`, `Up`). Commands are owned by the manager and executed each frame. Controller support is handled via a `Gamepad` wrapper around XInput.
 
-Or
-- Use whatever editor you like :)
+### Audio
+`SoundSystem` is a pure-virtual interface accessed through a `ServiceLocator`. The SDL3_mixer implementation (`SoundSystemSDL`) offloads all audio work to a dedicated thread: the main thread enqueues requests (`Play`, `PlayIfNotPlaying`, `Stop`), the audio thread processes them against a cache of loaded `MIX_Audio` assets and a map of named `MIX_Track`s. `PlayIfNotPlaying` is used for polled sounds that should run continuously while a condition holds, without restarting on every call.
 
-## Emscripten (web) version
+### Rendering & Sprites
+`SpriteComponent` loads a spritesheet texture and a JSON animation definition. Animations are collections of frames with per-frame timing and pivot points; the component advances frames each update and renders via the `IRenderable` interface. A `GridRenderer` handles tilemap rendering separately.
 
-### On windows
+### Resource Management
+`ResourceManager` caches loaded textures by path via `shared_ptr`, so multiple components referencing the same asset pay the load cost only once.
 
-For installing all of the needed tools on Windows I recommend using [Chocolatey](https://chocolatey.org/). You can then run the following in a terminal to install what is needed:
+---
 
-    choco install -y cmake
-    choco install -y emscripten
-    choco install -y ninja
-    choco install -y python
+## Game
 
-In a terminal, navigate to the root folder. Run this: 
+Dig Dug is a tile-based arcade game. The player moves through a grid, digging tunnels, and must defeat all enemies to advance to the next level.
 
-    mkdir build_web
-    cd build_web
-    emcmake cmake ..
-    emmake ninja
+Three game modes are supported: **Solo**, **Co-op** (shared lives, keyboard + controller), and **Versus** (two players compete; killing the other player scores points).
 
-To be able to see the webpage you can start a python webserver in the build_web folder
-
-    python -m http.server
-
-Then browse to http://localhost:8000 and you're good to go.
-
-### On OSX
-
-On Mac you can use homebrew
-
-    brew install cmake
-    brew install emscripten
-    brew install python
-
-In a terminal on OSX, navigate to the root folder. Run this: 
-
-    mkdir build_web
-    cd build_web
-    emcmake cmake .. -DCMAKE_OSX_ARCHITECTURES=""
-    emmake make
-
-To be able to see the webpage you can start a python webserver in the build_web folder
-
-    python3 -m http.server
-
-Then browse to http://localhost:8000 and you're good to go.
-
-## Github Actions
-
-This project is build with github actions.
-- The CMake workflow builds the project in Debug and Release for Windows and serves as a check that the project builds on that platform.
-- The Emscripten workflow generates a web version of the project and publishes it as a [github page](https://vladimir-prisacaru.github.io/prog4-project/). 
-  - The url of that page will be `https://<username>.github.io/<repository>/`
-- You can embed this page with 
-
-```<iframe style="position: absolute; top: 0px; left: 0px; width: 1024px; height: 576px;" src="https://<username>.github.io/<repository>/" loading="lazy"></iframe>```
-
+Enemy AI pathfinds toward the nearest player using a navigation graph built from the tunnel network, and attacks when in range with line-of-sight checks.

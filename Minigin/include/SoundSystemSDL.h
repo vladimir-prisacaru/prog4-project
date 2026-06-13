@@ -16,9 +16,9 @@ namespace dae
 
         void SetDataPath(const fs::path& dataPath) override;
         void Play(std::string_view id, float volume = 1.0f) override;
-        void PlayLooping(std::string_view id, float volume = 1.0f) override;
-        void PlayIfNotPlaying(std::string_view id, float volume = 1.0f) override;
-        void StopSound(std::string_view id) override;
+        void PlayIfNotPlaying(std::string_view trackId, std::string_view audioName,
+            float volume = 1.0f) override;
+        void StopSound(std::string_view trackId) override;
 
         private:
 

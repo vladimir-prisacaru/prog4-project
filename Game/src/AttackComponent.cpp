@@ -7,6 +7,7 @@
 #include "Enemy.h"
 #include "ServiceLocator.h"
 #include "SoundSystem.h"
+#include "Player.h"
 
 #include <array>
 
@@ -24,6 +25,12 @@ namespace dae
     {
         m_Physics = ctx.physics;
         m_Services = ctx.services;
+
+        if (auto* parent { GetOwner()->GetParent() })
+        {
+            if (auto* player { parent->GetComponent<Player>() })
+                m_PlayerId = player->GetId();
+        }
 
         m_Sprite = GetComponent<SpriteComponent>();
         m_BoxCollider = GetComponent<BoxCollider>();
@@ -106,10 +113,11 @@ namespace dae
         if (m_Services != nullptr && m_IsFriendly)
         {
             SoundSystem& sounds { m_Services->GetSoundSystem() };
+            const std::string pumpId { "pump_" + std::to_string(m_PlayerId) };
             if (m_IsPaused)
-                sounds.PlayIfNotPlaying("pump");
+                sounds.PlayIfNotPlaying(pumpId, "pump");
             else
-                sounds.StopSound("pump");
+                sounds.StopSound(pumpId);
         }
     }
 
@@ -153,7 +161,7 @@ namespace dae
         m_BoxCollider->SetEnabled(false);
 
         if (m_Services != nullptr && m_IsFriendly)
-            m_Services->GetSoundSystem().StopSound("pump");
+            m_Services->GetSoundSystem().StopSound("pump_" + std::to_string(m_PlayerId));
 
         if (m_Sprite != nullptr)
         {

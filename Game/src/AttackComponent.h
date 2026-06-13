@@ -60,6 +60,7 @@ namespace dae
         bool m_IsAttacking { };
         bool m_IsPaused { };
         bool m_AutoStops { };
+        int m_PlayerId { };
 
         std::function<void(ICollider*)> m_OnHitCallback { };
     };

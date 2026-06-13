@@ -266,15 +266,18 @@ namespace dae
 
         SoundSystem& sounds { m_Services->GetSoundSystem() };
 
+        const std::string movingId { "moving_" + std::to_string(m_PlayerId) };
+        const std::string harpoonId { "fire_harpoon_" + std::to_string(m_PlayerId) };
+
         if (m_CurrentState == State::Moving || m_CurrentState == State::Digging)
-            sounds.PlayIfNotPlaying("moving");
+            sounds.PlayIfNotPlaying(movingId, "moving");
         else
-            sounds.StopSound("moving");
+            sounds.StopSound(movingId);
 
         if (m_CurrentState == State::Attacking)
-            sounds.PlayIfNotPlaying("fire_harpoon");
+            sounds.PlayIfNotPlaying(harpoonId, "fire_harpoon");
         else
-            sounds.StopSound("fire_harpoon");
+            sounds.StopSound(harpoonId);
     }
 
     void Player::SetMoveDir(glm::vec2 moveDir)
@@ -498,8 +501,8 @@ namespace dae
         if (m_Services != nullptr)
         {
             SoundSystem& sounds { m_Services->GetSoundSystem() };
-            sounds.StopSound("moving");
-            sounds.StopSound("fire_harpoon");
+            sounds.StopSound("moving_" + std::to_string(m_PlayerId));
+            sounds.StopSound("fire_harpoon_" + std::to_string(m_PlayerId));
         }
 
         m_Sprite->SetAnimation("die");

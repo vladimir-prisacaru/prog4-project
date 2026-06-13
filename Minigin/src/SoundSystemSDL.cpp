@@ -15,7 +15,6 @@
 enum class RequestType
 {
     Play,
-    PlayLooping,
     PlayIfNotPlaying,
     Stop
 };
@@ -23,7 +22,8 @@ enum class RequestType
 struct PlayRequest
 {
     RequestType type { RequestType::Play };
-    std::string name { };
+    std::string name { };     // track key (and audio file name for Play/Stop)
+    std::string audioName { }; // audio file name override for PlayIfNotPlaying
     float volume { };
 };
 
@@ -55,11 +55,12 @@ class dae::SoundSystemSDL::Impl
         m_DataPath = dataPath;
     }
 
-    void Enqueue(RequestType type, std::string_view id, float volume)
+    void Enqueue(RequestType type, std::string_view id, float volume,
+        std::string_view audioName = "")
     {
         {
             std::lock_guard lock(m_Mutex);
-            m_Queue.push({ type, std::string(id), volume });
+            m_Queue.push({ type, std::string(id), std::string(audioName), volume });
         }
 
         m_CV.notify_one();
@@ -118,13 +119,10 @@ class dae::SoundSystemSDL::Impl
             switch (req.type)
             {
                 case RequestType::Play:
-                    PlayImmediate(req.name, req.volume, false);
-                    break;
-                case RequestType::PlayLooping:
-                    PlayImmediate(req.name, req.volume, true);
+                    PlayImmediate(req.name, req.volume);
                     break;
                 case RequestType::PlayIfNotPlaying:
-                    PlayIfNotPlayingImmediate(req.name, req.volume);
+                    PlayIfNotPlayingImmediate(req.name, req.audioName, req.volume);
                     break;
                 case RequestType::Stop:
                     StopImmediate(req.name);
@@ -150,36 +148,31 @@ class dae::SoundSystemSDL::Impl
         return track;
     }
 
-    void PlayImmediate(const std::string& name, float volume, bool loop)
+    void PlayImmediate(const std::string& name, float volume)
     {
-        if (!loop && volume == 1.0f)
-        {
-            // Fast path: fire-and-forget for one-shot sounds at full volume
-            MIX_Audio* audio = GetAudio(name);
-            if (audio)
-                MIX_PlayAudio(m_Mixer, audio);
-            return;
-        }
-
         MIX_Audio* audio = GetAudio(name);
         if (!audio)
             return;
 
+        if (volume == 1.0f)
+        {
+            // Fast path: fire-and-forget, SDL3_mixer manages the track lifetime
+            MIX_PlayAudio(m_Mixer, audio);
+            return;
+        }
+
+        // Non-default volume: use a named track so we can set gain
         MIX_Track* track = GetOrCreateNamedTrack(name);
         if (!track)
             return;
 
         MIX_SetTrackAudio(track, audio);
         MIX_SetTrackGain(track, volume);
-
-        SDL_PropertiesID props = SDL_CreateProperties();
-        if (loop)
-            SDL_SetNumberProperty(props, MIX_PROP_PLAY_LOOPS_NUMBER, -1);
-        MIX_PlayTrack(track, props);
-        SDL_DestroyProperties(props);
+        MIX_PlayTrack(track, 0);
     }
 
-    void PlayIfNotPlayingImmediate(const std::string& name, float volume)
+    void PlayIfNotPlayingImmediate(const std::string& name, const std::string& audioName,
+        float volume)
     {
         MIX_Track* track = GetOrCreateNamedTrack(name);
         if (!track)
@@ -188,17 +181,15 @@ class dae::SoundSystemSDL::Impl
         if (MIX_TrackPlaying(track))
             return;
 
-        MIX_Audio* audio = GetAudio(name);
+        // Load audio by the base file name (audioName), key the track by name
+        const std::string& fileKey { audioName.empty() ? name : audioName };
+        MIX_Audio* audio = GetAudio(fileKey);
         if (!audio)
             return;
 
         MIX_SetTrackAudio(track, audio);
         MIX_SetTrackGain(track, volume);
-
-        SDL_PropertiesID props = SDL_CreateProperties();
-        SDL_SetNumberProperty(props, MIX_PROP_PLAY_LOOPS_NUMBER, -1);
-        MIX_PlayTrack(track, props);
-        SDL_DestroyProperties(props);
+        MIX_PlayTrack(track, 0);
     }
 
     void StopImmediate(const std::string& name)
@@ -247,7 +238,7 @@ class dae::SoundSystemSDL::Impl
         return inserted->second.get();
     }
 
-    /* Returns the first file in m_ClipsPath whose stem matches `name` */
+    /* Returns the first file in m_DataPath / m_ClipsPath whose stem matches `name` */
     fs::path FindClipFile(const std::string& name) const
     {
         std::error_code ec;
@@ -304,14 +295,10 @@ namespace dae
         m_Impl->Enqueue(RequestType::Play, id, volume);
     }
 
-    void SoundSystemSDL::PlayLooping(std::string_view id, float volume)
+    void SoundSystemSDL::PlayIfNotPlaying(std::string_view trackId, std::string_view audioName,
+        float volume)
     {
-        m_Impl->Enqueue(RequestType::PlayLooping, id, volume);
-    }
-
-    void SoundSystemSDL::PlayIfNotPlaying(std::string_view id, float volume)
-    {
-        m_Impl->Enqueue(RequestType::PlayIfNotPlaying, id, volume);
+        m_Impl->Enqueue(RequestType::PlayIfNotPlaying, trackId, volume, audioName);
     }
 
     void SoundSystemSDL::StopSound(std::string_view id)
